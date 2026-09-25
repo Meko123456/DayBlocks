@@ -48,8 +48,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.designsystem.defaultColor
-import io.github.meko123456.dayblocks.core.designsystem.time.formatClock
-import io.github.meko123456.dayblocks.core.designsystem.time.formatDuration
+import io.github.meko123456.dayblocks.core.common.formatClock
+import io.github.meko123456.dayblocks.core.common.formatDuration
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan

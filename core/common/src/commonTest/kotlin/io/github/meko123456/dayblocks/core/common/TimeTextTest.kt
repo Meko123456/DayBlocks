@@ -1,9 +1,9 @@
-package io.github.meko123456.dayblocks.core.designsystem.time
+package io.github.meko123456.dayblocks.core.common
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class TimeFormatTest {
+class TimeTextTest {
 
     @Test
     fun twentyFourHourClockIsZeroPadded() {
