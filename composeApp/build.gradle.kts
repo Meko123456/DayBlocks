@@ -5,6 +5,9 @@ plugins {
     id("dayblocks.kmp.library")
     id("dayblocks.kmp.compose")
     id("dayblocks.kmp.koin")
+    // Type-safe navigation: every route is a @Serializable type, so a destination's arguments are
+    // checked by the compiler instead of being assembled into and parsed back out of a string.
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -37,6 +40,7 @@ kotlin {
             implementation(libs.jb.lifecycle.viewmodel.compose)
             implementation(libs.jb.lifecycle.runtime.compose)
             implementation(libs.koin.compose.viewmodel)
+            implementation(libs.kotlinx.serialization.json)
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
