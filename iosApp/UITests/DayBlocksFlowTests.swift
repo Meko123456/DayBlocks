@@ -44,6 +44,24 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1 block"].exists, "the template does not carry today's block")
     }
 
+    func testTurningOnRemindersAsksIOSAndClearsTheNotice() {
+        XCTAssertTrue(app.staticTexts["NOW"].waitForExistence(timeout: 20))
+        let notice = app.staticTexts.matching(NSPredicate(format: "label CONTAINS \"can't reach you\"")).firstMatch
+        let turnOn = app.buttons["Turn on"]
+        guard turnOn.waitForExistence(timeout: 5) else {
+            // This simulator allowed notifications on an earlier run, and iOS only ever asks once.
+            XCTAssertFalse(notice.exists, "notifications are allowed, yet the notice says otherwise")
+            return
+        }
+        turnOn.tap()
+
+        // The permission alert belongs to SpringBoard, not to the app.
+        let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"]
+        XCTAssertTrue(allow.waitForExistence(timeout: 10), "iOS never asked")
+        allow.tap()
+        XCTAssertTrue(notice.waitForNonExistence(timeout: 10), "the notice is still up after allowing")
+    }
+
     /// Adds a block through the editor with the default times and waits to be back on Today.
     private func addBlock(_ text: String) {
         // "matching", not "containing": the FAB's own label is "+  Add block", and containing looks
