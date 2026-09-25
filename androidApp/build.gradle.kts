@@ -1,8 +1,8 @@
 // The Android application. Deliberately not a Kotlin Multiplatform module: under AGP 9 an app
 // module compiles its own Kotlin (built-in Kotlin), and everything shared already lives in
 // :composeApp. What stays here is only what can exist on Android alone — the Activity, the
-// Application that starts Koin, and (in later steps) the Glance widget and the notification
-// receivers.
+// Application that starts Koin, the notification receivers, and (in a later step) the Glance
+// widget.
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeCompiler)
@@ -52,6 +52,8 @@ dependencies {
     implementation(project(":composeApp"))
     implementation(project(":core:common"))
     implementation(project(":core:database"))
+    implementation(project(":core:domain"))
+    implementation(project(":core:notifications"))
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.ktx)

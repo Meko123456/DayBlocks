@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">DayBlocks</string>
+
+    <!-- Notification channels: one per kind, so each can be silenced on its own. -->
+    <string name="channel_block_start">Block starts</string>
+    <string name="channel_block_start_description">When a block begins: what it is and how long you have.</string>
+    <string name="channel_check_in">Check-ins</string>
+    <string name="channel_check_in_description">Halfway through a longer block: still on it?</string>
+    <string name="channel_nudge">Nudges</string>
+    <string name="channel_nudge_description">A friendly follow-up after you got distracted.</string>
+    <string name="channel_planning">Planning</string>
+    <string name="channel_planning_description">When tomorrow has nothing planned yet.</string>
+    <string name="channel_streak">Streaks</string>
+    <string name="channel_streak_description">When a run of days on plan is on the line.</string>
+    <string name="channel_comeback">Comebacks</string>
+    <string name="channel_comeback_description">After a day or more away.</string>
+    <string name="channel_end_of_day">End of day</string>
+    <string name="channel_end_of_day_description">The evening look back at how the day went.</string>
+
+    <!-- A check-in's buttons. Each one is an answer, recorded without opening the app. -->
+    <string name="answer_on_it">On it ✅</string>
+    <string name="answer_got_distracted">Got distracted 😅</string>
+    <string name="answer_skip_block">Skip this block</string>
 </resources>
