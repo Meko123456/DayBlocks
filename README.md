@@ -19,9 +19,9 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | Step | Scope | State |
 |---|---|---|
 | 1 | Skeleton: modules, convention plugins, catalog, Koin, empty navigation | ✅ |
-| 2 | Domain models, use cases, database, repositories | — |
-| 3 | Today screen: timeline, Now card, free-time gaps | — |
-| 4 | Add / edit block | — |
+| 2 | Domain models, use cases, database, repositories | ✅ |
+| 3 | Today screen: timeline, Now card, free-time gaps | ✅ |
+| 4 | Add / edit block | ✅ |
 | 5 | Templates and weekday assignment | — |
 | 6 | Notifications with action buttons, both platforms | — |
 | 7 | Buddy engine and buddy UI | — |
@@ -141,6 +141,19 @@ unique to your team.
 ```sh
 ./gradlew testAndroidHostTest         # every module's tests on the JVM — the fast loop
 ./gradlew iosSimulatorArm64Test       # the same tests on Kotlin/Native
+```
+
+The data layer's tests run against a real SQLite on both: sqlite-jdbc on the JVM, and on iOS the
+system SQLite through the app's own driver, in memory.
+
+The iOS app also has XCUITests that drive the shared UI end to end — add a block, find it on
+Today. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
+run starts from an empty plan:
+
+```sh
+cd iosApp && xcodegen generate
+xcodebuild test -project iosApp.xcodeproj -scheme iosApp \
+  -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 ## A note on building iOS locally
