@@ -103,8 +103,9 @@ class TodayViewModelTest {
                     is TimelineItem.FreeTime -> "free ${item.span.startMinutes / 60}-${item.span.endMinutes / 60}"
                 }
             }
-            // Window: 06:00 widened to 08:00 (Sleep ends then). Gaps before work, and 15:00–24:00.
-            assertEquals(listOf("free 6-9", "work", "rest", "read", "free 15-24", "sleep"), shape)
+            // At 10:00 the 06:00–09:00 gap has already gone by, so it is not offered; past blocks
+            // still are, so the day keeps its shape. The only usable gap is 15:00–24:00.
+            assertEquals(listOf("work", "rest", "read", "free 15-24", "sleep"), shape)
         }
     }
 
@@ -157,14 +158,32 @@ class TodayViewModelTest {
     }
 
     @Test
-    fun anEmptyDayIsOneLongStretchOfFreeTime() = runTest {
+    fun anEmptyDayIsFreeFromNowUntilMidnight() = runTest {
         repo.all.value = emptyList()
         todayAt(LocalDateTime(2026, 9, 21, 10, 0)).state.test {
             val state = awaitLoaded()
-            assertEquals(listOf(TimelineItem.FreeTime(DaySpan(at(6), at(24)))), state.timeline)
+            assertEquals(listOf(TimelineItem.FreeTime(DaySpan(at(10), at(24)))), state.timeline)
             assertNull(state.now.current)
             assertNull(state.now.next)
         }
+    }
+
+    @Test
+    fun freeTimeStartsAtTheNextQuarterHourNotAtTheTopOfTheDay() = runTest {
+        // Found by running the app: at 12:20 an empty day used to be one 06:00–24:00 dashed box
+        // whose label was scrolled out of sight. The usable part of the day starts at 12:30.
+        repo.all.value = emptyList()
+        todayAt(LocalDateTime(2026, 9, 21, 12, 20)).state.test {
+            assertEquals(listOf(TimelineItem.FreeTime(DaySpan(at(12, 30), at(24)))), awaitLoaded().timeline)
+        }
+    }
+
+    @Test
+    fun quarterHourRoundingLeavesAlignedMinutesAlone() {
+        assertEquals(at(12, 30), ceilToQuarter(at(12, 20)))
+        assertEquals(at(12, 15), ceilToQuarter(at(12, 15)))
+        assertEquals(at(12, 15), ceilToQuarter(at(12, 1)))
+        assertEquals(0, ceilToQuarter(0))
     }
 
     @Test

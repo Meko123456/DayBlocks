@@ -98,7 +98,16 @@ class TodayViewModel(
             }
             TimelineItem.Block(block, status, day.records[block.id])
         }
-        val gaps = findFreeTime(day.today, window).map { TimelineItem.FreeTime(it) }
+        // Free time from now on, not from the top of the window. A gap that has already gone by
+        // is not something anyone can use, and offering it made an empty day one enormous dashed
+        // box whose label sat at 06:00, scrolled out of sight. Rounded up to the quarter hour so a
+        // slot never starts at 12:20.
+        val freeFrom = maxOf(window.startMinutes, ceilToQuarter(nowMinute))
+        val gaps = if (freeFrom < window.endMinutes) {
+            findFreeTime(day.today, DaySpan(freeFrom, window.endMinutes)).map { TimelineItem.FreeTime(it) }
+        } else {
+            emptyList()
+        }
 
         return TodayState(
             loading = false,
@@ -146,6 +155,9 @@ class TodayViewModel(
         val records: Map<BlockId, BlockRecord>,
     )
 }
+
+/** Up to the next quarter hour; already-aligned values are unchanged. */
+internal fun ceilToQuarter(minute: Int): Int = (minute + 14).floorDiv(15) * 15
 
 /** Whole minutes, rounded up: a countdown must not read zero while the block is still running. */
 internal fun Duration.ceilMinutes(): Int {

@@ -116,14 +116,20 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit) {
             }
         }
 
+        // The header and the Now card stay put; only the timeline scrolls. The first version
+        // scrolled everything to the present on open — which pushed the Now card, the one thing
+        // this screen exists to show, straight off the top.
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(scroll),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Header(state, onIntent)
             NowCardView(state.now, is24Hour, modifier = Modifier.padding(horizontal = 16.dp))
-            Timeline(state, is24Hour, hourHeight, onIntent, modifier = Modifier.padding(end = 16.dp))
-            Spacer(Modifier.height(88.dp)) // clear of the FAB
+            Column(Modifier.weight(1f).verticalScroll(scroll)) {
+                Spacer(Modifier.height(8.dp))
+                Timeline(state, is24Hour, hourHeight, onIntent, modifier = Modifier.padding(end = 16.dp))
+                Spacer(Modifier.height(88.dp)) // clear of the FAB
+            }
         }
     }
 }
@@ -200,7 +206,8 @@ private fun NowCardView(now: NowCard, is24Hour: Boolean, modifier: Modifier = Mo
     }
 }
 
-private val LabelColumn: Dp = 60.dp
+/** Wide enough for "10:00 AM" on one line; the 24-hour style needs less. */
+private fun labelColumn(is24Hour: Boolean): Dp = if (is24Hour) 56.dp else 76.dp
 
 @Composable
 private fun Timeline(
@@ -212,6 +219,7 @@ private fun Timeline(
 ) {
     val window = state.window
     val hours = window.durationMinutes / 60
+    val labelWidth = labelColumn(is24Hour)
     val minuteHeight = hourHeight / 60
     fun yOf(minute: Int): Dp = minuteHeight * (minute - window.startMinutes)
 
@@ -223,9 +231,11 @@ private fun Timeline(
             Row(Modifier.offset(y = yOf(minute) - 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     formatClock(minute, is24Hour),
-                    modifier = Modifier.width(LabelColumn).padding(start = 12.dp),
+                    modifier = Modifier.width(labelWidth).padding(start = 12.dp),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f),
+                    maxLines = 1,
+                    softWrap = false,
                 )
                 Box(Modifier.fillMaxWidth().height(1.dp).background(gridColor))
             }
@@ -238,8 +248,8 @@ private fun Timeline(
             val end = minOf(item.span.endMinutes, window.endMinutes)
             if (end <= start) continue
             val itemModifier = Modifier
-                .offset(x = LabelColumn, y = yOf(start) + 1.dp)
-                .width(maxWidth - LabelColumn)
+                .offset(x = labelWidth, y = yOf(start) + 1.dp)
+                .width(maxWidth - labelWidth)
                 .height((minuteHeight * (end - start)) - 2.dp)
             when (item) {
                 is TimelineItem.Block -> BlockTile(item, is24Hour, itemModifier) { onIntent(TodayIntent.BlockTapped(item.block.id)) }
@@ -250,9 +260,12 @@ private fun Timeline(
         // The current-time line, drawn last so it sits over whatever block it crosses.
         state.nowMinute?.let { minute ->
             val lineColor = MaterialTheme.colorScheme.primary
-            Row(Modifier.offset(x = LabelColumn - 5.dp, y = yOf(minute) - 5.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.offset(x = labelWidth - 5.dp, y = yOf(minute) - 5.dp).width(maxWidth - labelWidth + 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Box(Modifier.size(10.dp).background(lineColor, CircleShape))
-                Box(Modifier.fillMaxWidth().height(2.dp).background(lineColor))
+                Box(Modifier.weight(1f).height(2.dp).background(lineColor))
             }
         }
     }
