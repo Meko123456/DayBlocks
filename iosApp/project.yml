@@ -20,6 +20,12 @@ targets:
         CADisableMinimumFrameDurationOnPhone: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        # Background refresh rolls the reminder window forward while the app is closed — iOS holds
+        # only 64 pending notifications, so the schedule is a window that has to keep moving.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - io.github.meko123456.dayblocks.refresh
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.meko123456.dayblocks

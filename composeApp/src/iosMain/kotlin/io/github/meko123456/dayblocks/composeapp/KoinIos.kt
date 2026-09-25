@@ -1,7 +1,11 @@
 package io.github.meko123456.dayblocks.composeapp
 
 import io.github.meko123456.dayblocks.composeapp.di.initKoin
+import io.github.meko123456.dayblocks.core.common.ClockStyle
+import io.github.meko123456.dayblocks.core.common.IosClockStyle
 import io.github.meko123456.dayblocks.core.database.DriverFactory
+import io.github.meko123456.dayblocks.core.notifications.NotificationScheduler
+import io.github.meko123456.dayblocks.core.notifications.UserNotificationScheduler
 import org.koin.dsl.module
 
 /**
@@ -14,5 +18,14 @@ import org.koin.dsl.module
  */
 fun doInitKoin(inMemoryDatabase: Boolean) {
     val driverFactory = if (inMemoryDatabase) DriverFactory(name = null) else DriverFactory()
-    initKoin(platformModules = listOf(module { single { driverFactory } }))
+    initKoin(
+        platformModules = listOf(
+            module {
+                single { driverFactory }
+                single<ClockStyle> { IosClockStyle() }
+                single<NotificationScheduler> { UserNotificationScheduler() }
+            },
+        ),
+    )
+    startReminders()
 }
