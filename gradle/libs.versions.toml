@@ -24,6 +24,7 @@ junit = "4.13.2"
 [libraries]
 # --- Compose Multiplatform ---
 compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
+jb-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "jb-lifecycle" }
 jb-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "jb-lifecycle" }
 jb-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "jb-lifecycle" }
 jb-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "jb-navigation" }

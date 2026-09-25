@@ -1,6 +1,7 @@
 package io.github.meko123456.dayblocks.core.common
 
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -36,5 +37,20 @@ class FixedTimeProvider(
     var timeZone: TimeZone = TimeZone.UTC,
 ) : TimeProvider {
     override fun now(): Instant = instant
+    override fun zone(): TimeZone = timeZone
+}
+
+/**
+ * A clock that advances with an elapsed-milliseconds source. In a test that source is the coroutine
+ * test scheduler's virtual time, so `advanceTimeBy(60_000)` moves both the delays and the clock the
+ * code reads — the two stay in lockstep, and a minute ticker ticks exactly when the clock says a
+ * minute has passed.
+ */
+class OffsetTimeProvider(
+    private val origin: Instant,
+    private val timeZone: TimeZone,
+    private val elapsedMillis: () -> Long,
+) : TimeProvider {
+    override fun now(): Instant = origin + elapsedMillis().milliseconds
     override fun zone(): TimeZone = timeZone
 }
