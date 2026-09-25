@@ -5,10 +5,14 @@ import io.github.meko123456.dayblocks.core.database.DriverFactory
 import org.koin.dsl.module
 
 /**
- * Called once from the SwiftUI App's init. Named without a `Koin` type in the signature because
- * a Kotlin default argument does not reach the Objective-C header — Swift sees a plain, required
- * no-argument function.
+ * Called once from the SwiftUI App's init.
+ *
+ * [inMemoryDatabase] is the UI tests' isolation seam: each run starts from an empty plan instead of
+ * whatever the previous run left on the simulator's disk, which would make "add a block and see it"
+ * pass or fail depending on history. It is a required parameter rather than a default, because a
+ * Kotlin default argument does not reach the Objective-C header — Swift would not see it at all.
  */
-fun doInitKoin() {
-    initKoin(platformModules = listOf(module { single { DriverFactory() } }))
+fun doInitKoin(inMemoryDatabase: Boolean) {
+    val driverFactory = if (inMemoryDatabase) DriverFactory(name = null) else DriverFactory()
+    initKoin(platformModules = listOf(module { single { driverFactory } }))
 }

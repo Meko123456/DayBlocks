@@ -45,3 +45,30 @@ targets:
           cd "$SRCROOT/.."
           ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
+  iosAppUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - UITests
+    dependencies:
+      - target: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.meko123456.dayblocks.uitests
+        # Without this the bundle has no Info.plist, and signing fails with a message that blames
+        # the signature rather than the missing plist.
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+schemes:
+  iosApp:
+    build:
+      targets:
+        iosApp: all
+        iosAppUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - iosAppUITests

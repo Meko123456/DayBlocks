@@ -62,11 +62,23 @@ jobs:
       - name: Generate the Xcode project
         working-directory: iosApp
         run: xcodegen generate
-      # A generic destination rather than a named device: runner images change which simulators
-      # they carry, and a hardcoded "iPhone 16" turns an image update into a red build.
-      - name: Build the iOS app
+      # A simulator has to boot now, because the UI tests run on one — but it is chosen, not
+      # named. Runner images change which devices they carry, and a hardcoded "iPhone 16" turns an
+      # image update into a red build for no reason.
+      - name: Pick a simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available --json \
+            | python3 -c "import json,sys; d=json.load(sys.stdin)['devices']; print(next(x['udid'] for k in d for x in d[k] if 'iPhone' in x['name']))")
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "using $UDID"
+
+      # test, not build. A green build proves the Swift compiles and the framework is where Xcode
+      # looks; it says nothing about whether a tap reaches the shared editor and the saved block
+      # comes back from the database onto Today. The UI tests drive exactly that chain.
+      - name: Build and UI-test the iOS app
         working-directory: iosApp
         run: |
-          xcodebuild -project iosApp.xcodeproj -scheme iosApp \
-                     -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-                     -configuration Debug build
+          xcodebuild test -project iosApp.xcodeproj -scheme iosApp \
+                     -sdk iphonesimulator -destination "id=${{ steps.sim.outputs.udid }}" \
+                     -configuration Debug
