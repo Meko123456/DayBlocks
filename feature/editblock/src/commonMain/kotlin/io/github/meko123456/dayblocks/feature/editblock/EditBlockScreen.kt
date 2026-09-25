@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.designsystem.defaultColor
@@ -70,14 +71,20 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
             modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            // Save lives up here, beside Cancel, not at the bottom of the form. At the bottom it sat
+            // under the keyboard the moment a title was typed — the iOS UI test could not tap it,
+            // and on Android it took a Back press to reach. Top-right is where both platforms put
+            // an editor's confirm action for exactly that reason.
             Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { onIntent(EditBlockIntent.CancelTapped) }) { Text("Cancel") }
                 Text(
                     if (state.isNew) "New block" else "Edit block",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
                 )
-                TextButton(onClick = { onIntent(EditBlockIntent.CancelTapped) }) { Text("Cancel") }
+                Button(onClick = { onIntent(EditBlockIntent.SaveTapped) }, enabled = state.canSave) { Text("Save") }
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -154,15 +161,10 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
                 minLines = 2,
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (!state.isNew) {
-                    TextButton(onClick = { onIntent(EditBlockIntent.DeleteTapped) }) {
-                        Text("Delete", color = MaterialTheme.colorScheme.error)
-                    }
-                }
-                Spacer(Modifier.weight(1f))
-                Button(onClick = { onIntent(EditBlockIntent.SaveTapped) }, enabled = state.canSave) {
-                    Text("Save")
+            // Delete stays at the bottom: destructive, rare, and deliberately not next to Save.
+            if (!state.isNew) {
+                TextButton(onClick = { onIntent(EditBlockIntent.DeleteTapped) }) {
+                    Text("Delete block", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
