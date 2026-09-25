@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+
+      # testAndroidHostTest at the root, not per module: naming modules is a filter, and a test
+      # added to a module nobody listed would be collected by nobody while the tick stays green.
+      - name: Unit tests, debug build, lint
+        run: ./gradlew testAndroidHostTest :androidApp:assembleDebug :androidApp:lintDebug --stacktrace
+
+      # Debug never runs R8. Without this, a keep-rules mistake first surfaces when somebody builds
+      # a release by hand; lintVitalRelease is the release-blocking lint that lintDebug omits.
+      - name: Release build (R8 + release-blocking lint)
+        run: ./gradlew :androidApp:assembleRelease :androidApp:lintVitalRelease --stacktrace
+
+  ios:
+    # The shared code declares iOS targets; this is what proves they build and behave the same
+    # there. Compiling proves valid Kotlin/Native, running the tests proves equal behaviour.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Shared tests on the iOS simulator, iosArm64 compile
+        run: ./gradlew iosSimulatorArm64Test :composeApp:compileKotlinIosArm64 --stacktrace
+
+  iosApp:
+    # The Swift half. Without this job every line under iosApp/ and the Gradle-to-Xcode wiring the
+    # app links through are checked by nobody — the same hole a declared-but-never-built target is.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      # For Xcode's sake: the target's pre-build phase runs Gradle to produce ComposeApp.framework.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      # The project is generated rather than committed, so generating it is part of the check.
+      - name: Generate the Xcode project
+        working-directory: iosApp
+        run: xcodegen generate
+      # A generic destination rather than a named device: runner images change which simulators
+      # they carry, and a hardcoded "iPhone 16" turns an image update into a red build.
+      - name: Build the iOS app
+        working-directory: iosApp
+        run: |
+          xcodebuild -project iosApp.xcodeproj -scheme iosApp \
+                     -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+                     -configuration Debug build

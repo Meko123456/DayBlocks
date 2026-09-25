@@ -1,0 +1,10 @@
+# Keep the CI actions current. Gradle dependencies are held to the shared fleet toolchain on
+# purpose and move as a sweep across every repo, so only the Actions ecosystem is tracked here.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
