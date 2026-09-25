@@ -28,7 +28,16 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
         val navController = rememberNavController()
         NavHost(navController = navController, startDestination = Routes.TODAY) {
             composable(Routes.ONBOARDING) { OnboardingScreen() }
-            composable(Routes.TODAY) { TodayScreen() }
+            composable(Routes.TODAY) {
+                TodayScreen(
+                    // The editor's own arguments land with :feature:editblock in step 4.
+                    onOpenEditor = { _, _, _ -> navController.navigate(Routes.EDIT_BLOCK) },
+                    onOpenCheckIn = { navController.navigate(Routes.CHECK_IN) },
+                    onOpenTemplates = { navController.navigate(Routes.TEMPLATES) },
+                    onOpenStats = { navController.navigate(Routes.STATS) },
+                    onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                )
+            }
             composable(Routes.EDIT_BLOCK) { EditblockScreen() }
             composable(Routes.TEMPLATES) { TemplatesScreen() }
             composable(Routes.CHECK_IN) { CheckinScreen() }
