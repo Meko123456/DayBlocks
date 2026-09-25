@@ -19,6 +19,7 @@ import io.github.meko123456.dayblocks.database.Weekday_template
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
+import kotlin.time.Instant
 
 // Every conversion between a stored value and a domain type is in this file, so the storage format
 // can be read in one place:
@@ -121,4 +122,5 @@ internal fun Block_record.toBlockRecord(): BlockRecord = BlockRecord(
     blockId = BlockId(block_id),
     answer = answer?.let { CheckInAnswer.valueOf(it) },
     outcome = outcome?.let { BlockOutcome.valueOf(it) },
+    answeredAt = answered_at?.let { Instant.fromEpochMilliseconds(it) },
 )

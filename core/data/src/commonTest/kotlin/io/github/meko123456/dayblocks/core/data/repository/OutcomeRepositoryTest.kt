@@ -54,7 +54,7 @@ class OutcomeRepositoryTest {
         outcomes.recordAnswer(work.id, CheckInAnswer.GotDistracted, morning + 30.minutes)
 
         assertEquals(
-            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.GotDistracted)),
+            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.GotDistracted, answeredAt = morning + 30.minutes)),
             outcomes.observeDay(monday).first(),
         )
     }
@@ -73,8 +73,8 @@ class OutcomeRepositoryTest {
 
         assertEquals(
             mapOf(
-                work.id to BlockRecord(work.id, CheckInAnswer.GotDistracted, BlockOutcome.Done),
-                gym.id to BlockRecord(gym.id, CheckInAnswer.OnIt, BlockOutcome.Skipped),
+                work.id to BlockRecord(work.id, CheckInAnswer.GotDistracted, BlockOutcome.Done, answeredAt = morning),
+                gym.id to BlockRecord(gym.id, CheckInAnswer.OnIt, BlockOutcome.Skipped, answeredAt = morning + 13.hours),
             ),
             outcomes.observeDay(monday).first(),
         )
@@ -133,7 +133,7 @@ class OutcomeRepositoryTest {
         blocks.replaceDay(monday, listOf(longerWork, reading))
 
         assertEquals(
-            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.OnIt)),
+            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.OnIt, answeredAt = morning)),
             outcomes.observeDay(monday).first(),
         )
         assertEquals(1, driver.count("SELECT count(*) FROM block_record"))
@@ -150,7 +150,7 @@ class OutcomeRepositoryTest {
 
         // Gym has nothing recorded, so it is absent rather than present and empty.
         assertEquals(
-            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.OnIt)),
+            mapOf(work.id to BlockRecord(work.id, answer = CheckInAnswer.OnIt, answeredAt = morning)),
             outcomes.observeDay(monday).first(),
         )
         assertEquals(

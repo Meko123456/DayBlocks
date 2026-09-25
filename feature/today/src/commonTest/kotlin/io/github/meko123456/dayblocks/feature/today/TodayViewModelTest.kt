@@ -200,7 +200,10 @@ class TodayViewModelTest {
         outcomes.recordAnswer(work.id, CheckInAnswer.GotDistracted, Instant.parse("2026-09-21T07:00:00Z"))
         todayAt(LocalDateTime(2026, 9, 21, 12, 30)).state.test {
             val workItem = awaitLoaded().timeline.filterIsInstance<TimelineItem.Block>().single { it.block == work }
-            assertEquals(BlockRecord(work.id, answer = CheckInAnswer.GotDistracted), workItem.record)
+            assertEquals(
+                BlockRecord(work.id, answer = CheckInAnswer.GotDistracted, answeredAt = Instant.parse("2026-09-21T07:00:00Z")),
+                workItem.record,
+            )
             assertEquals(BlockOutcome.Partly, workItem.record?.effectiveOutcome)
         }
     }

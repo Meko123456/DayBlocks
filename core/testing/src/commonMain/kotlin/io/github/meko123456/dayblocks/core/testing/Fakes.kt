@@ -82,7 +82,7 @@ class FakeOutcomeRepository(private val blocks: FakeBlockRepository) : OutcomeRe
 
     override suspend fun recordAnswer(block: BlockId, answer: CheckInAnswer, at: Instant) {
         if (blocks.all.value.none { it.id == block }) return
-        records.update { it + (block to (it[block] ?: BlockRecord(block)).copy(answer = answer)) }
+        records.update { it + (block to (it[block] ?: BlockRecord(block)).copy(answer = answer, answeredAt = at)) }
     }
 
     override suspend fun recordOutcome(block: BlockId, outcome: BlockOutcome, at: Instant) {
