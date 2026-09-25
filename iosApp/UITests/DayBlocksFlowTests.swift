@@ -20,6 +20,32 @@ final class DayBlocksFlowTests: XCTestCase {
     }
 
     func testAddingABlockPutsItOnTheTimeline() {
+        addBlock("Deep work")
+        let saved = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Deep work'")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 10), "the saved block is not on Today")
+    }
+
+    func testSavingTodayAsATemplateListsItWithItsBlocks() {
+        addBlock("Deep work")
+        let templates = app.buttons["Templates"]
+        XCTAssertTrue(templates.waitForExistence(timeout: 10))
+        templates.tap()
+
+        let saveToday = app.buttons["Save today as a template"]
+        XCTAssertTrue(saveToday.waitForExistence(timeout: 10), "the Templates screen never opened")
+        saveToday.tap()
+        let name = app.textViews["Template name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5), "the naming dialog never opened")
+        name.tap()
+        name.typeText("Weekday")
+        app.buttons["Save"].tap()
+
+        XCTAssertTrue(app.staticTexts["Weekday"].waitForExistence(timeout: 10), "the saved template is not listed")
+        XCTAssertTrue(app.staticTexts["1 block"].exists, "the template does not carry today's block")
+    }
+
+    /// Adds a block through the editor with the default times and waits to be back on Today.
+    private func addBlock(_ text: String) {
         // "matching", not "containing": the FAB's own label is "+  Add block", and containing looks
         // at descendants rather than at the element itself.
         let add = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Add block'")).firstMatch
@@ -32,7 +58,7 @@ final class DayBlocksFlowTests: XCTestCase {
         let title = app.textViews["What are you doing?"]
         XCTAssertTrue(title.waitForExistence(timeout: 5))
         title.tap()
-        title.typeText("Deep work")
+        title.typeText(text)
 
         let save = app.buttons["Save"]
         XCTAssertTrue(save.waitForExistence(timeout: 5))
@@ -40,7 +66,5 @@ final class DayBlocksFlowTests: XCTestCase {
 
         // Back on Today, drawn from the database the editor just wrote to.
         XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 10), "did not return to Today")
-        let saved = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Deep work'")).firstMatch
-        XCTAssertTrue(saved.waitForExistence(timeout: 10), "the saved block is not on Today")
     }
 }
