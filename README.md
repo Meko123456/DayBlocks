@@ -23,7 +23,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 3 | Today screen: timeline, Now card, free-time gaps | ✅ |
 | 4 | Add / edit block | ✅ |
 | 5 | Templates and weekday assignment | ✅ |
-| 6 | Notifications with action buttons, both platforms | — |
+| 6 | Notifications with action buttons, both platforms | ✅ |
 | 7 | Buddy engine and buddy UI | — |
 | 8 | End-of-day check-in and stats | — |
 | 9 | Widgets: Android Glance, iOS WidgetKit | — |
@@ -91,6 +91,50 @@ Two rules the build enforces rather than documents:
 Versions live in `gradle/libs.versions.toml` and match the rest of the fleet: AGP 9.4.1,
 Kotlin 2.4.20, Gradle 9.7.1, Compose Multiplatform 1.11.0, compileSdk 37.
 
+## Reminders
+
+What the buddy says, and when, is worked out in one place and delivered by each platform in its
+own way.
+
+**When.** `NotificationPlanner` in `:core:buddy` is pure Kotlin. From the plan it works out the
+next 36 hours of notifications, at most 64 of them, since iOS holds no more than that:
+
+| Notification | When |
+|---|---|
+| Block start | At the block's start: *"Hey! It's 13:00. Time for “Reading” 📖 You've got 2 hours."* |
+| Mid-block check-in | Halfway through a block of an hour or more (never Sleep), with **On it ✅ / Got distracted 😅 / Skip this block** |
+| Follow-up | Ten minutes after "Got distracted", if five minutes or more are left |
+| Planning | 20:00 when tomorrow has nothing planned and no template, and again at 08:30 if it still has not |
+| End of day | Ten minutes after the day's last waking block |
+
+Everything is computed on real instants. A block across midnight fires on the right calendar
+day. In the hour a DST change skips, a block starts at the first moment that exists, and its
+length is how long it actually lasts. The clock in the text follows the device's 12- or 24-hour
+setting. Quiet hours, the daily cap and the tone of voice are the buddy engine's (step 7), applied
+on top.
+
+**Rebuilt, never patched.** `ReminderRescheduler` in `:composeApp` rebuilds the whole window
+whenever anything it depends on changes:
+- the plan, an answer or a template assignment
+- a new planning day
+- on Android: a reboot, an update, the clock, time zone, 12/24-hour or language changing,
+  exact alarms being allowed, and a 12-hourly refresh
+- on iOS: the app coming to the foreground, a significant time change, and background refresh
+
+Days the window reaches get their template first, so tomorrow's 07:00 run is scheduled tonight
+whether or not the app is opened. Answers are recorded as they are given. The check-in is
+prefilled from them, and the follow-up is derived from them, so it survives any reschedule.
+
+**Android.** One exact alarm per notification, and one notification channel per kind, so each
+kind can be silenced on its own. Exact timing needs the *Alarms & reminders* permission, which
+Android 14 no longer grants by default. Today shows a notice with a link to the system page, and
+without the permission reminders arrive within ten minutes. A check-in's buttons go to a
+receiver that writes the answer to the database without opening the app.
+
+**iOS.** `UNUserNotificationCenter` with a check-in category that carries the three buttons.
+Triggers are calendar dates in the device's zone, so a plan follows its owner across time zones
+as the app itself does. The Swift notification delegate hands each answer to Kotlin.
+
 ## Running it
 
 You need JDK 17 or newer (Android Studio's bundled JBR works), and for iOS, Xcode plus
@@ -146,14 +190,24 @@ unique to your team.
 The data layer's tests run against a real SQLite on both: sqlite-jdbc on the JVM, and on iOS the
 system SQLite through the app's own driver, in memory.
 
-The iOS app also has XCUITests that drive the shared UI end to end — add a block and find it on
-Today, save the day as a template and find it listed. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
+The iOS app also has XCUITests that drive the shared UI end to end: add a block and find it on
+Today, save the day as a template and find it listed, and turn on notifications from Today. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
 run starts from an empty plan:
 
 ```sh
 cd iosApp && xcodegen generate
 xcodebuild test -project iosApp.xcodeproj -scheme iosApp \
   -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+One more test waits for real notifications. It adds a block and leaves the app, waits for the
+check-in on the home screen, answers "Got distracted" from the notification, and waits for the
+follow-up. That takes up to half an hour, so it is skipped unless asked for:
+
+```sh
+TEST_RUNNER_DAYBLOCKS_DELIVERY_TESTS=1 xcodebuild test -project iosApp.xcodeproj -scheme iosApp \
+  -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:iosAppUITests/ReminderDeliveryTests
 ```
 
 ## A note on building iOS locally
