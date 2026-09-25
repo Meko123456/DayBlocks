@@ -5,5 +5,5 @@ import org.koin.dsl.module
 
 /** The ViewModel's scope is left to its default, so production gets the standard Main-bound one. */
 val todayModule = module {
-    viewModel { TodayViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { TodayViewModel(get(), get(), get(), get(), get(), get(), get()) }
 }

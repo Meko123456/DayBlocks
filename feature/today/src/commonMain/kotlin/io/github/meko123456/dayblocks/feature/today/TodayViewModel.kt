@@ -13,6 +13,7 @@ import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.time.endInstant
+import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
 import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
 import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
 import kotlin.time.Duration
@@ -25,6 +26,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -50,6 +53,7 @@ class TodayViewModel(
     private val planningDay: PlanningDayRule,
     private val resolveNow: ResolveNow,
     private val findFreeTime: FindFreeTime,
+    private val autoFill: AutoFillDay,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
 ) : MviViewModel<TodayState, TodayIntent, TodayEffect>(TodayState(), scope) {
 
@@ -59,12 +63,19 @@ class TodayViewModel(
             .map { planningDay.planDateAt(it.toLocalDateTime(clock.zone())) }
             .distinctUntilChanged()
             .flatMapLatest { date ->
-                // Yesterday's plan too: at 00:30 the block in progress is usually yesterday's.
-                combine(
-                    blocks.observeDay(date.minus(1, DateTimeUnit.DAY)),
-                    blocks.observeDay(date),
-                    outcomes.observeDay(date),
-                ) { yesterday, today, records -> Day(date, yesterday, today, records) }
+                flow {
+                    // A new planning day gets its one chance at its weekday's template before it is
+                    // first drawn — so an assigned "Weekday" is simply there when the day begins.
+                    autoFill(date)
+                    // Yesterday's plan too: at 00:30 the block in progress is usually yesterday's.
+                    emitAll(
+                        combine(
+                            blocks.observeDay(date.minus(1, DateTimeUnit.DAY)),
+                            blocks.observeDay(date),
+                            outcomes.observeDay(date),
+                        ) { yesterday, today, records -> Day(date, yesterday, today, records) },
+                    )
+                }
             }
         launchInScope {
             combine(ticks, days) { now, day -> render(now, day) }.collect { next -> reduce { next } }

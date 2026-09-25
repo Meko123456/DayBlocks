@@ -15,6 +15,13 @@ import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
 import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
 import io.github.meko123456.dayblocks.core.testing.FakeBlockRepository
 import io.github.meko123456.dayblocks.core.testing.FakeOutcomeRepository
+import io.github.meko123456.dayblocks.core.testing.FakeTemplateRepository
+import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
+import io.github.meko123456.dayblocks.core.domain.usecase.GenerateDayFromTemplate
+import io.github.meko123456.dayblocks.core.domain.model.Template
+import io.github.meko123456.dayblocks.core.domain.model.TemplateBlock
+import io.github.meko123456.dayblocks.core.domain.model.TemplateId
+import kotlinx.datetime.DayOfWeek
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -46,11 +53,13 @@ class TodayViewModelTest {
     private val sleep = block("sleep", monday, at(24), at(32), Category.Sleep)
     private val repo = FakeBlockRepository(listOf(work, rest, read, sleep))
     private val outcomes = FakeOutcomeRepository(repo)
+    private val templates = FakeTemplateRepository()
 
     /** A ViewModel whose clock starts at [start] and moves only when the test advances virtual time. */
     private fun TestScope.todayAt(start: LocalDateTime): TodayViewModel {
         val clock = OffsetTimeProvider(start.toInstant(zone), zone) { testScheduler.currentTime }
-        return TodayViewModel(repo, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), backgroundScope)
+        val autoFill = AutoFillDay(repo, templates, GenerateDayFromTemplate { "filled-${repo.all.value.size}" }, clock)
+        return TodayViewModel(repo, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), autoFill, backgroundScope)
     }
 
     private suspend fun ReceiveTurbine<TodayState>.awaitLoaded(): TodayState {
@@ -232,6 +241,19 @@ class TodayViewModelTest {
             assertEquals(TodayEffect.OpenStats, awaitItem())
             assertEquals(TodayEffect.OpenSettings, awaitItem())
             expectNoEvents()
+        }
+    }
+
+    @Test
+    fun anEmptyDayWithAnAssignedTemplateOpensAlreadyPlanned() = runTest {
+        repo.all.value = emptyList()
+        val weekday = Template(TemplateId("weekday"), "Weekday", listOf(TemplateBlock("Deep work", Category.Work, DaySpan(at(9), at(12)))))
+        templates.upsert(weekday)
+        templates.assign(DayOfWeek.MONDAY, weekday.id)
+        todayAt(LocalDateTime(2026, 9, 21, 10, 0)).state.test {
+            var state = awaitLoaded()
+            while (state.now.current == null) state = awaitItem()
+            assertEquals("Deep work", state.now.current?.title)
         }
     }
 
