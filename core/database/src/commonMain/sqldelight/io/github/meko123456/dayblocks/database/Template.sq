@@ -81,3 +81,17 @@ INSERT OR REPLACE INTO weekday_template(weekday, template_id) VALUES (:weekday, 
 
 clearWeekday:
 DELETE FROM weekday_template WHERE weekday = :weekday;
+
+-- One row per date that has had its one chance at weekday auto-fill (see TemplateRepository's
+-- claimAutoFill). Keyed by plan date alone: whether the day was then filled, or found already
+-- planned and left alone, it is never offered again.
+CREATE TABLE day_autofill (
+    plan_date TEXT NOT NULL PRIMARY KEY,
+    claimed_at INTEGER NOT NULL
+);
+
+selectAutoFill:
+SELECT plan_date FROM day_autofill WHERE plan_date = :planDate;
+
+insertAutoFill:
+INSERT INTO day_autofill(plan_date, claimed_at) VALUES (:planDate, :claimedAt);

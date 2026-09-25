@@ -13,6 +13,9 @@ import io.github.meko123456.dayblocks.database.DayBlocksDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import io.github.meko123456.dayblocks.core.data.mapper.toColumn
+import kotlinx.datetime.LocalDate
+import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
 
 /**
@@ -69,6 +72,19 @@ internal class SqlTemplateRepository(
                 queries.clearWeekday(day.name)
             } else {
                 queries.assignWeekday(weekday = day.name, templateId = template.value)
+            }
+        }
+    }
+
+    /** Check and insert in one transaction, so two callers can never both claim the same day. */
+    override suspend fun claimAutoFill(date: LocalDate, at: Instant): Boolean = withContext(dispatchers.io) {
+        database.transactionWithResult {
+            val column = date.toColumn()
+            if (queries.selectAutoFill(column).executeAsOneOrNull() != null) {
+                false
+            } else {
+                queries.insertAutoFill(planDate = column, claimedAt = at.toEpochMilliseconds())
+                true
             }
         }
     }

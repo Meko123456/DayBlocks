@@ -3,7 +3,9 @@ package io.github.meko123456.dayblocks.core.domain.repository
 import io.github.meko123456.dayblocks.core.domain.model.Template
 import io.github.meko123456.dayblocks.core.domain.model.TemplateId
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 
 /** Saved day templates and which weekday each one auto-fills. */
 interface TemplateRepository {
@@ -21,4 +23,12 @@ interface TemplateRepository {
 
     /** Assigns [template] to [day], or clears the day when [template] is null. */
     suspend fun assign(day: DayOfWeek, template: TemplateId?)
+
+    /**
+     * Records that [date] has had its one chance at auto-fill, returning true only to the first
+     * caller. A day is filled from its weekday's template at most once, so clearing a filled day
+     * — or planning it by hand before the app next opens — is never undone by the template
+     * coming back.
+     */
+    suspend fun claimAutoFill(date: LocalDate, at: Instant): Boolean
 }

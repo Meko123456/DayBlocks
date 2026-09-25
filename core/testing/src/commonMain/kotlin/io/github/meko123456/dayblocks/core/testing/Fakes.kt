@@ -7,6 +7,10 @@ import io.github.meko123456.dayblocks.core.domain.model.CheckInAnswer
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
+import io.github.meko123456.dayblocks.core.domain.repository.TemplateRepository
+import io.github.meko123456.dayblocks.core.domain.model.Template
+import io.github.meko123456.dayblocks.core.domain.model.TemplateId
+import kotlinx.datetime.DayOfWeek
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,4 +89,30 @@ class FakeOutcomeRepository(private val blocks: FakeBlockRepository) : OutcomeRe
         if (blocks.all.value.none { it.id == block }) return
         records.update { it + (block to (it[block] ?: BlockRecord(block)).copy(outcome = outcome)) }
     }
+}
+
+/** Templates, weekday assignments and auto-fill claims, with the real repository's rules. */
+class FakeTemplateRepository(initial: List<Template> = emptyList()) : TemplateRepository {
+    val templates = MutableStateFlow(initial)
+    val assignments = MutableStateFlow<Map<DayOfWeek, TemplateId>>(emptyMap())
+    val claimed = mutableSetOf<LocalDate>()
+
+    override fun observeTemplates(): Flow<List<Template>> = templates.map { all -> all.sortedBy { it.name.lowercase() } }
+    override suspend fun template(id: TemplateId): Template? = templates.value.firstOrNull { it.id == id }
+    override suspend fun upsert(template: Template) = templates.update { all -> all.filterNot { it.id == template.id } + template }
+
+    /** Deleting clears the template's weekdays, as the real foreign key does. */
+    override suspend fun delete(id: TemplateId) {
+        templates.update { all -> all.filterNot { it.id == id } }
+        assignments.update { a -> a.filterValues { it != id } }
+    }
+
+    override fun observeWeekdayAssignments(): Flow<Map<DayOfWeek, TemplateId>> = assignments
+
+    override suspend fun assign(day: DayOfWeek, template: TemplateId?) {
+        require(template == null || templates.value.any { it.id == template }) { "no such template: $template" }
+        assignments.update { if (template == null) it - day else it + (day to template) }
+    }
+
+    override suspend fun claimAutoFill(date: LocalDate, at: Instant): Boolean = claimed.add(date)
 }

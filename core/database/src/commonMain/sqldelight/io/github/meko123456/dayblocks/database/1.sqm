@@ -1,0 +1,6 @@
+-- Version 1 → 2: the auto-fill claim table. Additive only, so it is safe under iOS's
+-- foreign-keys-on-during-migration behaviour (see DriverFactory.ios.kt): nothing is rebuilt.
+CREATE TABLE day_autofill (
+    plan_date TEXT NOT NULL PRIMARY KEY,
+    claimed_at INTEGER NOT NULL
+);
