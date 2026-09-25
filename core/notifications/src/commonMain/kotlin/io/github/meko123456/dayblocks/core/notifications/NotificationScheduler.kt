@@ -1,37 +1,20 @@
 package io.github.meko123456.dayblocks.core.notifications
 
-import kotlin.time.Instant
+import io.github.meko123456.dayblocks.core.domain.model.ScheduledNotification
 
 /**
- * The port the rest of the app schedules through. Deliberately narrow: the domain decides *what*
- * the buddy says and *when*, and this only carries it to the platform.
+ * The port the app schedules through. Deliberately narrow: :core:buddy decides *what* is said and
+ * *when*, and this only carries it to the platform.
  *
- * [cancelAll] then re-scheduling is the only supported way to change the plan. iOS caps pending
- * notifications at 64, so the implementation there schedules a rolling window rather than the
- * whole future, and a partial update would leave the two platforms with different ideas of the
- * day. One entry point makes that impossible to get wrong from the caller's side.
+ * Replacing everything is the only way to change what is pending. iOS holds at most 64 pending
+ * notifications, so the plan is always a rolling window rather than the whole future, and an
+ * incremental update would let the two platforms drift into different ideas of the day. One
+ * entry point makes that impossible to get wrong from the caller's side.
  */
 interface NotificationScheduler {
-    suspend fun schedule(requests: List<ScheduledNotification>)
-    suspend fun cancelAll()
-    suspend fun hasPermission(): Boolean
-    suspend fun requestPermission(): Boolean
+    /**
+     * Makes [notifications] the whole of what is pending: anything scheduled earlier and absent
+     * from the list is cancelled, and one with the same id is replaced rather than duplicated.
+     */
+    suspend fun replaceAll(notifications: List<ScheduledNotification>)
 }
-
-/**
- * One notification the platform should deliver. [id] is stable across reschedules for the same
- * logical notification so replacing the plan replaces rather than duplicates.
- */
-data class ScheduledNotification(
-    val id: String,
-    val at: Instant,
-    val title: String,
-    val body: String,
-    val kind: NotificationKind,
-    val actions: List<NotificationAction> = emptyList(),
-)
-
-enum class NotificationKind { BlockStart, MidBlockCheckIn, Nudge, PlanningReminder, Streak, Comeback, EndOfDay }
-
-/** A button on the notification. The answer is written to the database by the platform handler. */
-enum class NotificationAction { OnIt, GotDistracted, SkipBlock, OpenPlanner, ReviewDay }
