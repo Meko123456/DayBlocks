@@ -5,7 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import io.github.meko123456.dayblocks.core.domain.Category
+import io.github.meko123456.dayblocks.core.domain.model.Category
 
 private val Sunrise = Color(0xFFF2994A)
 private val Ink = Color(0xFF1B1D22)

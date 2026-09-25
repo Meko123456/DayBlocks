@@ -1,4 +1,4 @@
-package io.github.meko123456.dayblocks.core.domain
+package io.github.meko123456.dayblocks.core.domain.model
 
 /**
  * What a block is for. A closed set rather than free text because the category drives the colour,
