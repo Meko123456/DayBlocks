@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
+
 // The shared application shell: root composable, navigation graph and Koin startup. It is a
 // library rather than the Android application so both platforms consume the same entry point —
 // :androidApp hosts it in an Activity, iosApp links the ComposeApp framework it produces.
@@ -45,5 +48,15 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.koin.android)
         }
+        commonTest.dependencies {
+            implementation(project(":core:testing"))
+            implementation(libs.kotlinx.coroutines.test)
+        }
+    }
+
+    // The test executable reaches the system SQLite through :core:database, and nothing links it
+    // for a test binary — the same gap :core:data closes for its own tests.
+    targets.withType<KotlinNativeTarget>().configureEach {
+        binaries.withType<TestExecutable>().configureEach { linkerOpts("-lsqlite3") }
     }
 }

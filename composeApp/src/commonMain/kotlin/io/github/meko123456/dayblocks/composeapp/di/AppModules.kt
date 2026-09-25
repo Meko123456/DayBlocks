@@ -1,5 +1,6 @@
 package io.github.meko123456.dayblocks.composeapp.di
 
+import io.github.meko123456.dayblocks.composeapp.reminders.remindersModule
 import io.github.meko123456.dayblocks.core.buddy.buddyModule
 import io.github.meko123456.dayblocks.core.common.commonModule
 import io.github.meko123456.dayblocks.core.data.dataModule
@@ -28,6 +29,7 @@ fun appModules(): List<Module> = listOf(
     dataModule,
     notificationsModule,
     buddyModule,
+    remindersModule,
     onboardingModule,
     todayModule,
     editblockModule,
