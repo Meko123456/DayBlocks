@@ -47,7 +47,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             composable<EditBlockRoute> { entry ->
                 EditBlockScreen(args = entry.toRoute<EditBlockRoute>().toArgs(), onClose = { navController.popBackStack() })
             }
-            composable<TemplatesRoute> { TemplatesScreen() }
+            composable<TemplatesRoute> { TemplatesScreen(onClose = { navController.popBackStack() }) }
             composable<CheckInRoute> { CheckinScreen() }
             composable<StatsRoute> { StatsScreen() }
             composable<SettingsRoute> { SettingsScreen() }
