@@ -1,0 +1,4 @@
+<resources>
+    <!-- Only the window chrome before Compose draws; every visible colour comes from DayBlocksTheme. -->
+    <style name="Theme.DayBlocks" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

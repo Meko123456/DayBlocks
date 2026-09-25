@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+      ObsoleteSdkInt says mipmap-anydpi-v26 is redundant at minSdk 26 and should be merged into
+      mipmap-anydpi. For an adaptive icon that advice breaks the build: a bare `anydpi` folder
+      carries an implicit -v4 qualifier, <adaptive-icon> is only valid from API 26, and AAPT2
+      compiles the resource to nothing — the merger lists it, the link step then reports
+      "resource mipmap/ic_launcher not found". Tried and reverted on 2026-09-25.
+
+      Suppressed for this one folder only, so the check still guards every other resource.
+    -->
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+</lint>

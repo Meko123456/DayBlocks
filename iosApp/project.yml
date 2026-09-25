@@ -1,0 +1,47 @@
+name: iosApp
+options:
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - iosApp
+    info:
+      path: iosApp/Info.plist
+      properties:
+        CFBundleDisplayName: DayBlocks
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        # Compose Multiplatform renders at the display's full refresh rate only when this is set;
+        # without it ProMotion devices are held to 60 Hz and scrolling the timeline visibly stutters.
+        CADisableMinimumFrameDurationOnPhone: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.meko123456.dayblocks
+        FRAMEWORK_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        # -lsqlite3 because SQLDelight's native driver calls the system SQLite, and ComposeApp is a
+        # *static* framework: a linker option declared on it does not travel to the app that links
+        # it, so the app has to ask for libsqlite3 itself or every sqlite3_* symbol is undefined.
+        OTHER_LDFLAGS: "$(inherited) -framework ComposeApp -lsqlite3"
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # :composeApp declares iosArm64 and iosSimulatorArm64 and deliberately not iosX64. A
+        # `generic/platform=iOS Simulator` destination asks for every simulator arch, requests
+        # x86_64, and the Kotlin plugin has no target for it. Stated once here rather than as a
+        # flag every xcodebuild invocation has to remember.
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+        # Ad-hoc signing: free, and all the simulator needs.
+        CODE_SIGN_IDENTITY: "-"
+    preBuildScripts:
+      - name: Compile Kotlin Framework
+        script: |
+          # A default, never an override: a hardcoded Android Studio path is right on a developer's
+          # Mac and wrong on a CI runner, where setup-java has already exported JAVA_HOME.
+          export JAVA_HOME="${JAVA_HOME:-/Applications/Android Studio.app/Contents/jbr/Contents/Home}"
+          cd "$SRCROOT/.."
+          ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false

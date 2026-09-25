@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+. DayBlocks has no account and no server: the plan, the templates and the streak
+  history exist only on this device. Backup is therefore the only way they survive a new phone,
+  so both cloud backup and device-to-device transfer carry the database and the preferences.
+  Nothing here is a credential or a token.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>
