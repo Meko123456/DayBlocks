@@ -1,0 +1,76 @@
+-- One row per planned block.
+--
+-- plan_date is the planning day the block belongs to, as ISO yyyy-MM-dd: text in that form sorts
+-- exactly as the dates do, so BETWEEN and ORDER BY need no date functions. start_minutes and
+-- end_minutes count from that day's midnight and may run past 1440 — "00:00 Sleep" at the end of
+-- Monday's plan is 1440..1920 on Monday's row, never a row on Tuesday (see DaySpan).
+--
+-- Enums are stored by name, so a row reads the same in a SQL shell as in the app, and reordering
+-- an enum's constants cannot silently change what old rows mean.
+--
+-- updated_at is the epoch milliseconds of the last write. It is what "most recently planned" means
+-- for the editor's title suggestions: when the user planned it, not which day it was planned for.
+CREATE TABLE block (
+    id TEXT NOT NULL PRIMARY KEY,
+    plan_date TEXT NOT NULL,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    start_minutes INTEGER NOT NULL,
+    end_minutes INTEGER NOT NULL,
+    note TEXT,
+    updated_at INTEGER NOT NULL
+);
+
+-- Every read is one day in start order, or a run of days in date then start order.
+CREATE INDEX block_plan_date ON block(plan_date, start_minutes);
+
+-- The tie-breaks after start_minutes only make the order total, so two blocks starting together
+-- never swap places between one emission and the next.
+selectByDate:
+SELECT * FROM block
+WHERE plan_date = :planDate
+ORDER BY start_minutes, end_minutes, title, id;
+
+selectInRange:
+SELECT * FROM block
+WHERE plan_date BETWEEN :from AND :toInclusive
+ORDER BY plan_date, start_minutes, end_minutes, title, id;
+
+-- An upsert is this update, then the insert below when it matched nothing. Not INSERT OR REPLACE:
+-- REPLACE deletes the old row before inserting the new one, and with foreign keys on, that delete
+-- cascades the block's check-in record away. Not UPSERT (ON CONFLICT DO UPDATE) either: it needs
+-- SQLite 3.24, and Android 8.0 — minSdk 26 — ships 3.18, which is also why SQLDelight's default
+-- 3.18 dialect is the right one here.
+update:
+UPDATE block
+SET plan_date = :planDate,
+    title = :title,
+    category = :category,
+    start_minutes = :startMinutes,
+    end_minutes = :endMinutes,
+    note = :note,
+    updated_at = :updatedAt
+WHERE id = :id;
+
+insert:
+INSERT INTO block(id, plan_date, title, category, start_minutes, end_minutes, note, updated_at)
+VALUES (:id, :planDate, :title, :category, :startMinutes, :endMinutes, :note, :updatedAt);
+
+deleteById:
+DELETE FROM block WHERE id = :id;
+
+-- replaceDay's first step: everything on the date that is not coming back. The blocks that are
+-- coming back are updated in place afterwards, so their check-in records survive the replace.
+deleteFromDateExcept:
+DELETE FROM block WHERE plan_date = :planDate AND id NOT IN :keep;
+
+-- replaceDay refuses an id that already belongs to another date: re-dating a block keeps its id,
+-- so a "copy yesterday" that forgot fresh ids would otherwise move yesterday's plan, not copy it.
+idsOnOtherDates:
+SELECT id FROM block WHERE id IN :ids AND plan_date != :planDate;
+
+recentTitles:
+SELECT title FROM block
+GROUP BY title
+ORDER BY max(updated_at) DESC, title
+LIMIT :limit;

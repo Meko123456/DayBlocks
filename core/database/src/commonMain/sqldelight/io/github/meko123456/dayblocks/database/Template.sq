@@ -1,0 +1,83 @@
+-- Day templates, their blocks, and which weekday each one auto-fills.
+--
+-- Both child tables reference template(id) ON DELETE CASCADE, so deleting a template takes its
+-- blocks and clears its weekdays in the same statement. That is TemplateRepository.delete's
+-- contract, and it holds only while foreign keys are on — SQLite ships with them off, per
+-- connection, which is why each platform's DriverFactory turns them on.
+CREATE TABLE template (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+-- A template's blocks in the order they were saved: position is the index in Template.blocks.
+CREATE TABLE template_block (
+    template_id TEXT NOT NULL REFERENCES template(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    start_minutes INTEGER NOT NULL,
+    end_minutes INTEGER NOT NULL,
+    note TEXT,
+    PRIMARY KEY (template_id, position)
+);
+
+-- weekday is a kotlinx.datetime DayOfWeek name, MONDAY to SUNDAY. One template per day at most;
+-- one template may fill several days.
+CREATE TABLE weekday_template (
+    weekday TEXT NOT NULL PRIMARY KEY,
+    template_id TEXT NOT NULL REFERENCES template(id) ON DELETE CASCADE
+);
+
+-- One row per template block, or one row of NULL block columns for a template with no blocks.
+-- Reading a template and its blocks through one query is what keeps an observer from ever
+-- pairing a template with another version's blocks, which two separately observed tables could.
+CREATE VIEW template_with_blocks AS
+SELECT
+    template.id,
+    template.name,
+    template_block.position,
+    template_block.title,
+    template_block.category,
+    template_block.start_minutes,
+    template_block.end_minutes,
+    template_block.note
+FROM template
+LEFT JOIN template_block ON template_block.template_id = template.id;
+
+selectAllWithBlocks:
+SELECT * FROM template_with_blocks
+ORDER BY name COLLATE NOCASE, id, position;
+
+selectWithBlocks:
+SELECT * FROM template_with_blocks
+WHERE id = :id
+ORDER BY position;
+
+-- Upsert as update-then-insert, for the reason Block.sq gives: INSERT OR REPLACE would delete the
+-- template row first, and the cascade would silently unassign its weekdays on every save.
+rename:
+UPDATE template SET name = :name WHERE id = :id;
+
+insert:
+INSERT INTO template(id, name) VALUES (:id, :name);
+
+deleteById:
+DELETE FROM template WHERE id = :id;
+
+deleteBlocks:
+DELETE FROM template_block WHERE template_id = :templateId;
+
+insertBlock:
+INSERT INTO template_block(template_id, position, title, category, start_minutes, end_minutes, note)
+VALUES (:templateId, :position, :title, :category, :startMinutes, :endMinutes, :note);
+
+selectWeekdays:
+SELECT * FROM weekday_template;
+
+-- REPLACE is safe here, unlike on the other tables: nothing references weekday_template, so the
+-- row it deletes has nothing to cascade to.
+assignWeekday:
+INSERT OR REPLACE INTO weekday_template(weekday, template_id) VALUES (:weekday, :templateId);
+
+clearWeekday:
+DELETE FROM weekday_template WHERE weekday = :weekday;

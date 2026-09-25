@@ -1,5 +1,0 @@
--- Placeholder so the SQLDelight plugin has a schema to generate from and the driver wiring is
--- proven end to end in the skeleton. The real block/template/check-in tables land in step 2.
-CREATE TABLE schemaProbe (
-    id INTEGER NOT NULL PRIMARY KEY
-);

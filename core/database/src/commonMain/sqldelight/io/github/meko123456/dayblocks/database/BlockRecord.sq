@@ -1,0 +1,36 @@
+-- How a block went: the answer given from a notification during the day and the outcome confirmed
+-- at the check-in, each with the moment it was recorded, in epoch milliseconds. One row per block
+-- that has anything recorded. The row belongs to its block — ON DELETE CASCADE — so deleting a
+-- block, or replacing the day it was on, deletes what was recorded about it.
+CREATE TABLE block_record (
+    block_id TEXT NOT NULL PRIMARY KEY REFERENCES block(id) ON DELETE CASCADE,
+    answer TEXT,
+    answered_at INTEGER,
+    outcome TEXT,
+    outcome_at INTEGER
+);
+
+-- Joined through block because a record has no date of its own: the day is its block's plan_date.
+selectByDate:
+SELECT block_record.*
+FROM block_record
+JOIN block ON block.id = block_record.block_id
+WHERE block.plan_date = :planDate
+  AND (block_record.answer IS NOT NULL OR block_record.outcome IS NOT NULL)
+ORDER BY block.start_minutes, block.id;
+
+-- The empty row that setAnswer or setOutcome then fills, created only for a block that exists.
+-- Answers arrive from notifications, and a notification can outlive its block: it was scheduled,
+-- then the day was replaced. Such an answer has nothing left to describe, so it is dropped here
+-- rather than failing the foreign key inside a broadcast receiver.
+insertIfMissing:
+INSERT INTO block_record(block_id)
+SELECT id FROM block
+WHERE id = :blockId
+  AND NOT EXISTS (SELECT 1 FROM block_record WHERE block_id = :blockId);
+
+setAnswer:
+UPDATE block_record SET answer = :answer, answered_at = :answeredAt WHERE block_id = :blockId;
+
+setOutcome:
+UPDATE block_record SET outcome = :outcome, outcome_at = :outcomeAt WHERE block_id = :blockId;
