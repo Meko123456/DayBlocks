@@ -47,6 +47,10 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.koin.android)
+            // The notification permission is requested through an Activity result, and whether
+            // notifications are enabled is read through NotificationManagerCompat.
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.core.ktx)
         }
         commonTest.dependencies {
             implementation(project(":core:testing"))

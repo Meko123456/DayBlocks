@@ -69,6 +69,7 @@ fun TodayScreen(
     onOpenTemplates: () -> Unit,
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit,
+    notice: @Composable () -> Unit = {},
     viewModel: TodayViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -85,11 +86,11 @@ fun TodayScreen(
         }
     }
 
-    TodayContent(state = state, onIntent = viewModel::onIntent)
+    TodayContent(state = state, onIntent = viewModel::onIntent, notice = notice)
 }
 
 @Composable
-internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit) {
+internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit, notice: @Composable () -> Unit = {}) {
     val is24Hour = rememberIs24HourFormat()
     Scaffold(
         floatingActionButton = {
@@ -124,6 +125,9 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Header(state, onIntent)
+            // A slot the app shell fills — today, the "reminders are off" strip — so this screen
+            // shows it without knowing anything about notifications.
+            notice()
             NowCardView(state.now, is24Hour, modifier = Modifier.padding(horizontal = 16.dp))
             Column(Modifier.weight(1f).verticalScroll(scroll)) {
                 Spacer(Modifier.height(8.dp))

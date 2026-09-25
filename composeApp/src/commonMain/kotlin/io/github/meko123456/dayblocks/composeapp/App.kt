@@ -13,6 +13,7 @@ import io.github.meko123456.dayblocks.composeapp.navigation.SettingsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.StatsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TemplatesRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TodayRoute
+import io.github.meko123456.dayblocks.composeapp.reminders.ReminderNotice
 import io.github.meko123456.dayblocks.core.designsystem.DayBlocksTheme
 import io.github.meko123456.dayblocks.feature.checkin.CheckinScreen
 import io.github.meko123456.dayblocks.feature.editblock.EditBlockScreen
@@ -42,6 +43,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     onOpenTemplates = { navController.navigate(TemplatesRoute) },
                     onOpenStats = { navController.navigate(StatsRoute) },
                     onOpenSettings = { navController.navigate(SettingsRoute) },
+                    notice = { ReminderNotice() },
                 )
             }
             composable<EditBlockRoute> { entry ->
