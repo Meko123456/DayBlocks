@@ -1,4 +1,4 @@
-package io.github.meko123456.dayblocks.feature.today
+package io.github.meko123456.dayblocks.core.testing
 
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome

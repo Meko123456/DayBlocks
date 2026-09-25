@@ -13,6 +13,8 @@ import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
 import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
+import io.github.meko123456.dayblocks.core.testing.FakeBlockRepository
+import io.github.meko123456.dayblocks.core.testing.FakeOutcomeRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

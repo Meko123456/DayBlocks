@@ -39,6 +39,8 @@ include(":core:database")
 include(":core:notifications")
 include(":core:buddy")
 include(":core:designsystem")
+// Test fixtures shared by the features' ViewModel tests; never a production dependency.
+include(":core:testing")
 
 // Feature modules may depend on core modules but never on each other; navigation between them is
 // wired in :composeApp. Enforced by the dayblocks.kmp.feature convention plugin, which grants a

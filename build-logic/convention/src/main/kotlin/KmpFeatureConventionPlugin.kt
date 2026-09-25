@@ -41,6 +41,9 @@ class KmpFeatureConventionPlugin : Plugin<Project> {
             // control and a way to assert on a Flow of states.
             add("commonTestImplementation", libs.findLibrary("kotlinx-coroutines-test").get())
             add("commonTestImplementation", libs.findLibrary("turbine").get())
+            // Shared fakes of the domain's repositories, so seven screens' tests do not each keep
+            // their own copy that can drift from the interface contract.
+            add("commonTestImplementation", project(":core:testing"))
         }
     }
 }
