@@ -22,7 +22,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 2 | Domain models, use cases, database, repositories | ✅ |
 | 3 | Today screen: timeline, Now card, free-time gaps | ✅ |
 | 4 | Add / edit block | ✅ |
-| 5 | Templates and weekday assignment | — |
+| 5 | Templates and weekday assignment | ✅ |
 | 6 | Notifications with action buttons, both platforms | — |
 | 7 | Buddy engine and buddy UI | — |
 | 8 | End-of-day check-in and stats | — |
@@ -146,8 +146,8 @@ unique to your team.
 The data layer's tests run against a real SQLite on both: sqlite-jdbc on the JVM, and on iOS the
 system SQLite through the app's own driver, in memory.
 
-The iOS app also has XCUITests that drive the shared UI end to end — add a block, find it on
-Today. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
+The iOS app also has XCUITests that drive the shared UI end to end — add a block and find it on
+Today, save the day as a template and find it listed. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
 run starts from an empty plan:
 
 ```sh
