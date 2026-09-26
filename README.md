@@ -24,7 +24,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 4 | Add / edit block | ✅ |
 | 5 | Templates and weekday assignment | ✅ |
 | 6 | Notifications with action buttons, both platforms | ✅ |
-| 7 | Buddy engine and buddy UI | — |
+| 7 | Buddy engine and buddy UI | ✅ |
 | 8 | End-of-day check-in and stats | — |
 | 9 | Widgets: Android Glance, iOS WidgetKit | — |
 | 10 | Onboarding and settings | — |
@@ -59,6 +59,7 @@ graph TD
     F --> domain[core:domain]
     F --> designsystem[core:designsystem]
     F --> common[core:common]
+    today[feature:today] -.buddy's face and words.-> buddy
 
     data --> domain
     data --> database[core:database]
@@ -110,8 +111,8 @@ next 36 hours of notifications, at most 64 of them, since iOS holds no more than
 Everything is computed on real instants. A block across midnight fires on the right calendar
 day. In the hour a DST change skips, a block starts at the first moment that exists, and its
 length is how long it actually lasts. The clock in the text follows the device's 12- or 24-hour
-setting. Quiet hours, the daily cap and the tone of voice are the buddy engine's (step 7), applied
-on top.
+setting. On top of that sit the buddy's own rules: its tone, quiet hours and the daily cap,
+described under [The buddy](#the-buddy).
 
 **Rebuilt, never patched.** `ReminderRescheduler` in `:composeApp` rebuilds the whole window
 whenever anything it depends on changes:
@@ -134,6 +135,47 @@ receiver that writes the answer to the database without opening the app.
 **iOS.** `UNUserNotificationCenter` with a check-in category that carries the three buttons.
 Triggers are calendar dates in the device's zone, so a plan follows its owner across time zones
 as the app itself does. The Swift notification delegate hands each answer to Kotlin.
+
+## The buddy
+
+Kubi is an original mascot: a rounded block with a sprout on top, drawn in code
+(`BuddyFace` in `:core:designsystem`), with a face for each of six moods. Happy, proud,
+encouraging, worried, disappointed (playfully, never guilt-tripping) and sleepy. Tap it on Today
+to rename it.
+
+The engine in `:core:buddy` is pure Kotlin and decides everything the buddy says and when:
+
+- **What it says.** Each situation (block start, check-in, follow-up, planning, streak, comeback,
+  review) has its own pool of lines in each tone, with placeholders for the block's title, the
+  time left or the streak. Lines rotate deterministically: each situation's occurrences are
+  numbered through the day, so back-to-back notifications never share a line, and rebuilding the
+  schedule keeps every notification's words.
+- **Tone.** Gentle, Normal and Pushy change the words *and* the rhythm:
+
+  | Tone | Checks in on blocks of | Follow-ups after "Got distracted" |
+  |---|---|---|
+  | Gentle | 90 minutes or more | one, after 15 minutes |
+  | Normal | an hour or more | one, after 10 minutes |
+  | Pushy | 45 minutes or more, twice from two hours | two, after 10 and 25 minutes |
+
+  Only Normal and Pushy send a second planning reminder in the morning.
+- **Quiet hours** (23:00–08:00 by default) keep its own voice down. A check-in or a follow-up
+  inside them is dropped, and a reminder that can wait is moved to when they end. A block you
+  planned inside them still announces its start: planning a 07:00 run is asking to hear about it.
+- **The daily cap** (12 by default) is a budget for the whole planning day, spent in priority
+  order: block starts, check-ins, follow-ups, the review, planning, streaks, comebacks. Moments
+  already past count too, so rebuilding the schedule in the afternoon cannot spend the morning's
+  budget again.
+- **Streaks and comebacks.** After two or more days that followed their plan (70% adherence),
+  the morning of a planned day gets a word about the streak. A day after the app was last opened
+  there is a comeback message, then after three days and after a week. Opening the app moves
+  them along.
+- **Mood.** Today's face follows adherence so far. Only blocks with an outcome count, from the
+  check-in or from a notification answer, so a morning with nothing scored yet is a happy one,
+  not a failing one. It is sleepy at night and through a Sleep block.
+
+The settings — name, tone, quiet hours and cap — live in multiplatform-settings (SharedPreferences
+on Android, NSUserDefaults on iOS). Changing one reschedules everything straight away.
 
 ## Running it
 
