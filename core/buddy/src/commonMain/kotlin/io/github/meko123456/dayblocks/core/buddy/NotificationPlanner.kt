@@ -130,8 +130,9 @@ class NotificationPlanner(private val voice: BuddyVoice) {
             quiet = Quiet.Speak,
         )
         // Nobody asks "still sleeping?", and a short block is over before the question would help.
-        // An answer already given needs no second ask.
-        if (record?.answer == null && block.category != Category.Sleep && length >= tone.minCheckInLength) {
+        // A block already answered for — from a notification, or rated at the check-in — needs no
+        // second ask.
+        if (record?.answer == null && record?.outcome == null && block.category != Category.Sleep && length >= tone.minCheckInLength) {
             val count = tone.checkInsFor(length)
             for (k in 1..count) {
                 val at = (start + length * k / (count + 1)).floorToMinute()

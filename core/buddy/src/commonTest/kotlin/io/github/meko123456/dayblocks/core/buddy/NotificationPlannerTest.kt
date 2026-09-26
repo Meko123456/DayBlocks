@@ -125,6 +125,12 @@ class NotificationPlannerTest {
     }
 
     @Test
+    fun aBlockAlreadyRatedAtTheCheckInIsNotAskedAboutEither() {
+        val rated = mapOf(reading.id to BlockRecord(reading.id, outcome = BlockOutcome.Done))
+        assertTrue(plan(at(monday, 13, 10), day(monday, reading, records = rated)).none { it.kind == MidBlockCheckIn })
+    }
+
+    @Test
     fun gotDistractedBringsAFollowUpTenMinutesLaterWithTheTimeLeft() {
         val records = mapOf(reading.id to BlockRecord(reading.id, answer = CheckInAnswer.GotDistracted, answeredAt = at(monday, 14, 2)))
         val nudge = plan(at(monday, 14, 2), day(monday, reading, records = records)).single { it.kind == Nudge }
