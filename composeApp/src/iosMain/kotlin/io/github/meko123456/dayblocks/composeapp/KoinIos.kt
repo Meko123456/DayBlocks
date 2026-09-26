@@ -1,6 +1,8 @@
 package io.github.meko123456.dayblocks.composeapp
 
 import io.github.meko123456.dayblocks.composeapp.di.initKoin
+import io.github.meko123456.dayblocks.composeapp.widgets.IosWidgetPublisher
+import io.github.meko123456.dayblocks.composeapp.widgets.WidgetPublisher
 import io.github.meko123456.dayblocks.core.common.ClockStyle
 import io.github.meko123456.dayblocks.core.common.IosClockStyle
 import io.github.meko123456.dayblocks.core.data.SettingsFactory
@@ -26,6 +28,7 @@ fun doInitKoin(inMemoryDatabase: Boolean) {
                 single { SettingsFactory(fresh = inMemoryDatabase) }
                 single<ClockStyle> { IosClockStyle() }
                 single<NotificationScheduler> { UserNotificationScheduler() }
+                single<WidgetPublisher> { IosWidgetPublisher() }
             },
         ),
     )

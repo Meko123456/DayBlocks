@@ -1,6 +1,7 @@
 import BackgroundTasks
 import SwiftUI
 import UserNotifications
+import WidgetKit
 import ComposeApp
 
 @main
@@ -18,6 +19,8 @@ struct DayBlocksApp: App {
         // notification action or widget refresh the system delivers without a visible screen.
         // The UI tests launch with DAYBLOCKS_UITEST set so each run starts from an empty plan.
         let underUITest = ProcessInfo.processInfo.environment["DAYBLOCKS_UITEST"] != nil
+        // Before Koin starts the widget updater, whose first publish asks for a reload.
+        RemindersIosKt.setWidgetReloader { WidgetCenter.shared.reloadAllTimelines() }
         KoinIosKt.doInitKoin(inMemoryDatabase: underUITest)
         UNUserNotificationCenter.current().delegate = Self.notifications
     }
@@ -37,6 +40,10 @@ struct DayBlocksApp: App {
                 // worked out against a clock that is no longer the one on the wall.
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
                     Self.reschedule()
+                }
+                // The widget: open on Today, whatever screen the app was left on.
+                .onOpenURL { url in
+                    if url.scheme == "dayblocks", url.host == "today" { RemindersIosKt.openToday() }
                 }
         }
         .backgroundTask(.appRefresh(Self.refreshTask)) {

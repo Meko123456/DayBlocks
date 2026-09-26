@@ -4,6 +4,8 @@ import io.github.meko123456.dayblocks.composeapp.navigation.AppLink
 import io.github.meko123456.dayblocks.composeapp.navigation.AppLinks
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderRescheduler
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderResponder
+import io.github.meko123456.dayblocks.composeapp.widgets.WidgetUpdater
+import io.github.meko123456.dayblocks.composeapp.widgets.widgetReloader
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.CheckInAnswer
 import io.github.meko123456.dayblocks.core.notifications.registerNotificationCategories
@@ -34,6 +36,7 @@ private val reminders = CoroutineScope(
 internal fun startReminders() {
     registerNotificationCategories()
     KoinPlatform.getKoin().get<ReminderRescheduler>().start(reminders)
+    KoinPlatform.getKoin().get<WidgetUpdater>().start(reminders)
 }
 
 /** Whenever the app comes to the foreground, the clock changes, or iOS grants a background refresh. */
@@ -66,4 +69,14 @@ fun answerReminder(blockId: String, answer: String, done: () -> Unit) {
 /** When the review notification itself is tapped: open that day's check-in. [date] is ISO, or null. */
 fun openReview(date: String?) {
     AppLinks.open(AppLink.Review(date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }))
+}
+
+/** Swift hands over how to reload the widget; WidgetCenter is Swift-only. Set before [doInitKoin]. */
+fun setWidgetReloader(reload: () -> Unit) {
+    widgetReloader = reload
+}
+
+/** The widget was tapped: open Today, whatever screen the app was left on. */
+fun openToday() {
+    AppLinks.open(AppLink.Today)
 }

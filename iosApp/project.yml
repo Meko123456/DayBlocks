@@ -26,6 +26,19 @@ targets:
           - fetch
         BGTaskSchedulerPermittedIdentifiers:
           - io.github.meko123456.dayblocks.refresh
+        # dayblocks://today is what the widget opens.
+        CFBundleURLTypes:
+          - CFBundleURLName: io.github.meko123456.dayblocks
+            CFBundleURLSchemes:
+              - dayblocks
+    # The App Group is how the widget reads what the app writes: the timeline and the faces.
+    entitlements:
+      path: iosApp/iosApp.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.io.github.meko123456.dayblocks
+    dependencies:
+      - target: DayBlocksWidget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.meko123456.dayblocks
@@ -51,6 +64,32 @@ targets:
           cd "$SRCROOT/.."
           ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
+  DayBlocksWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widget
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: DayBlocks
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/DayBlocksWidget.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.io.github.meko123456.dayblocks
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.meko123456.dayblocks.widget
+        CODE_SIGN_IDENTITY: "-"
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+    dependencies:
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
   iosAppUITests:
     type: bundle.ui-testing
     platform: iOS
