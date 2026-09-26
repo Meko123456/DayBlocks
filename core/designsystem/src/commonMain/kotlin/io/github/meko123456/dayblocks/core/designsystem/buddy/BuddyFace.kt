@@ -7,12 +7,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
 
@@ -26,19 +31,35 @@ import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
  */
 @Composable
 fun BuddyFace(mood: BuddyMood, modifier: Modifier = Modifier, size: Dp = 56.dp) {
-    Canvas(modifier.size(size)) {
-        val s = this.size.minDimension
-        drawSprout(mood, s)
-        drawRoundRect(Body, topLeft = Offset(0.12f * s, 0.24f * s), size = Size(0.76f * s, 0.68f * s), cornerRadius = CornerRadius(0.24f * s))
-        drawRoundRect(Highlight, topLeft = Offset(0.2f * s, 0.3f * s), size = Size(0.26f * s, 0.1f * s), cornerRadius = CornerRadius(0.05f * s))
-        if (mood == BuddyMood.Happy || mood == BuddyMood.Proud || mood == BuddyMood.Encouraging) {
-            drawOval(Cheek, topLeft = Offset(0.19f * s, 0.6f * s), size = Size(0.13f * s, 0.07f * s))
-            drawOval(Cheek, topLeft = Offset(0.68f * s, 0.6f * s), size = Size(0.13f * s, 0.07f * s))
-        }
-        drawEyes(mood, s)
-        drawMouth(mood, s)
-        drawExtras(mood, s)
+    Canvas(modifier.size(size)) { drawBuddy(mood) }
+}
+
+/**
+ * Kubi as a bitmap, for where Compose does not draw: an Android widget's one image, and the
+ * pictures an iOS widget reads from the App Group. The same drawing as on screen, so the buddy on
+ * the home screen is the buddy in the app.
+ */
+fun renderBuddy(mood: BuddyMood, sizePx: Int): ImageBitmap {
+    val bitmap = ImageBitmap(sizePx, sizePx)
+    CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(sizePx.toFloat(), sizePx.toFloat())) {
+        drawBuddy(mood)
     }
+    return bitmap
+}
+
+/** Kubi in [mood], filling this scope's square. */
+fun DrawScope.drawBuddy(mood: BuddyMood) {
+    val s = size.minDimension
+    drawSprout(mood, s)
+    drawRoundRect(Body, topLeft = Offset(0.12f * s, 0.24f * s), size = Size(0.76f * s, 0.68f * s), cornerRadius = CornerRadius(0.24f * s))
+    drawRoundRect(Highlight, topLeft = Offset(0.2f * s, 0.3f * s), size = Size(0.26f * s, 0.1f * s), cornerRadius = CornerRadius(0.05f * s))
+    if (mood == BuddyMood.Happy || mood == BuddyMood.Proud || mood == BuddyMood.Encouraging) {
+        drawOval(Cheek, topLeft = Offset(0.19f * s, 0.6f * s), size = Size(0.13f * s, 0.07f * s))
+        drawOval(Cheek, topLeft = Offset(0.68f * s, 0.6f * s), size = Size(0.13f * s, 0.07f * s))
+    }
+    drawEyes(mood, s)
+    drawMouth(mood, s)
+    drawExtras(mood, s)
 }
 
 private val Body = Color(0xFFF2994A)
