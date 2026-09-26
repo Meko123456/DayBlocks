@@ -3,6 +3,7 @@ package io.github.meko123456.dayblocks.core.domain.usecase
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
+import io.github.meko123456.dayblocks.core.domain.model.effectiveOutcomes
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -33,8 +34,7 @@ class ComputeStreak(private val score: ScoreAdherence) {
         while (true) {
             val blocks = blocksOn(day)
             if (blocks.isEmpty()) return streak
-            val outcomes = recordsOn(day).mapNotNull { (id, record) -> record.effectiveOutcome?.let { id to it } }.toMap()
-            val adherence = score(blocks, outcomes) ?: return streak
+            val adherence = score(blocks, recordsOn(day).effectiveOutcomes()) ?: return streak
             if (adherence < THRESHOLD) return streak
             streak++
             day = day.minus(1, DateTimeUnit.DAY)

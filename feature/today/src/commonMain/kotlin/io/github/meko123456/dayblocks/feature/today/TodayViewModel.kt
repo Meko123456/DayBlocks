@@ -15,6 +15,7 @@ import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
 import io.github.meko123456.dayblocks.core.domain.model.MINUTES_PER_DAY
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
+import io.github.meko123456.dayblocks.core.domain.model.effectiveOutcomes
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
@@ -149,7 +150,7 @@ class TodayViewModel(
 
         // Adherence so far: only blocks with an outcome count, so a morning with nothing scored is a
         // fresh start rather than a failing grade.
-        val scored = day.records.mapNotNull { (id, record) -> record.effectiveOutcome?.let { id to it } }.toMap()
+        val scored = day.records.effectiveOutcomes()
         val local = now.toLocalDateTime(zone)
         val outlook = todayBuddy.outlook(
             TodaySnapshot(

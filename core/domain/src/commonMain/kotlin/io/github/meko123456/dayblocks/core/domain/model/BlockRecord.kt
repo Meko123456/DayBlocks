@@ -20,3 +20,10 @@ data class BlockRecord(
      */
     val effectiveOutcome: BlockOutcome? get() = outcome ?: answer?.suggestedOutcome
 }
+
+/**
+ * What each block is scored as: the check-in's outcome where there is one, the notification
+ * answer's suggestion where there is not, and nothing at all for a block nobody said a word about.
+ */
+fun Map<BlockId, BlockRecord>.effectiveOutcomes(): Map<BlockId, BlockOutcome> =
+    mapNotNull { (id, record) -> record.effectiveOutcome?.let { id to it } }.toMap()
