@@ -27,7 +27,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 7 | Buddy engine and buddy UI | ✅ |
 | 8 | End-of-day check-in and stats | ✅ |
 | 9 | Widgets: Android Glance, iOS WidgetKit | ✅ |
-| 10 | Onboarding and settings | — |
+| 10 | Onboarding and settings | ✅ |
 
 ## Architecture
 
@@ -219,6 +219,32 @@ On a physical iPhone the App Group needs your own team's signing. Choose it unde
 Capabilities* for both the app and the `DayBlocksWidget` target. The committed configuration
 signs ad hoc, which only the simulator accepts.
 
+## Onboarding and settings
+
+**Onboarding** is four short pages:
+1. Meet the buddy and give it a name.
+2. Choose a tone. Each tone shows the line it would use to announce a block, in the name you
+   just chose.
+3. Hear what the notifications are for, *then* choose whether to allow them. The system prompt
+   comes only after a yes.
+4. Start from an example day, which is also saved as your first template, or from a blank page.
+
+Nothing is saved until the end. Someone who already has a plan, from an update or a restored
+backup, is never sent through onboarding.
+
+**Settings** saves every change as it is made, and the notifications and widgets follow at once:
+- the buddy's name and tone
+- quiet hours and the daily cap
+- the hours Today's timeline covers
+- light, dark or system theme
+- a colour per category
+
+**Backups.** Everything stays on the phone. There's no account and no server. Export writes one
+JSON file with every block, template, weekday assignment, recorded outcome and setting: through
+the system file picker on Android, and the share sheet on iOS. Import checks the whole file
+against the app's own rules first, then replaces everything in one transaction. A file that
+fails any check changes nothing, and a backup from a newer version is refused.
+
 ## Running it
 
 You need JDK 17 or newer (Android Studio's bundled JBR works), and for iOS, Xcode plus
@@ -277,7 +303,10 @@ system SQLite through the app's own driver, in memory.
 
 The iOS app also has XCUITests that drive the shared UI end to end: add a block and find it on
 Today, save the day as a template and find it listed, turn on notifications from Today, rename
-the buddy, and rate a block at the check-in. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
+the buddy, rate a block at the check-in, change a setting, and walk through onboarding as a new
+user. Every test but the onboarding one launches with `-app.onboarded YES`. That launch argument
+is a user default for that one run, so those tests start on Today without any test code in the
+app. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
 run starts from an empty plan:
 
 ```sh
