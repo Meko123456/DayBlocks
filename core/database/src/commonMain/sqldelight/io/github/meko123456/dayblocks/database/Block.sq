@@ -74,3 +74,11 @@ SELECT title FROM block
 GROUP BY title
 ORDER BY max(updated_at) DESC, title
 LIMIT :limit;
+
+-- The whole plan, for a backup.
+selectAll:
+SELECT * FROM block ORDER BY plan_date, start_minutes, id;
+
+-- Restoring a backup replaces the plan. Each block's record goes with it, by the cascade.
+deleteAll:
+DELETE FROM block;

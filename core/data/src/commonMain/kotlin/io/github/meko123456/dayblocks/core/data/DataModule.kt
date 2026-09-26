@@ -2,9 +2,11 @@ package io.github.meko123456.dayblocks.core.data
 
 import com.russhwolf.settings.ObservableSettings
 import io.github.meko123456.dayblocks.core.data.repository.PreferencesSettingsRepository
+import io.github.meko123456.dayblocks.core.data.repository.SqlBackupRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlBlockRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlOutcomeRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlTemplateRepository
+import io.github.meko123456.dayblocks.core.domain.repository.BackupRepository
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
@@ -26,4 +28,5 @@ val dataModule = module {
     // The store itself is bound on its own so a test can put an in-memory one in its place.
     single<ObservableSettings> { get<SettingsFactory>().create() }
     single<SettingsRepository> { PreferencesSettingsRepository(get()) }
+    single<BackupRepository> { SqlBackupRepository(database = get(), settings = get(), dispatchers = get(), time = get()) }
 }

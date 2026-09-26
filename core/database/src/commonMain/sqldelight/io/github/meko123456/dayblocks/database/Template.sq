@@ -76,6 +76,10 @@ SELECT * FROM weekday_template;
 
 -- REPLACE is safe here, unlike on the other tables: nothing references weekday_template, so the
 -- row it deletes has nothing to cascade to.
+-- Restoring a backup replaces every template. Their blocks and weekdays go with them, by the cascade.
+deleteAllTemplates:
+DELETE FROM template;
+
 assignWeekday:
 INSERT OR REPLACE INTO weekday_template(weekday, template_id) VALUES (:weekday, :templateId);
 

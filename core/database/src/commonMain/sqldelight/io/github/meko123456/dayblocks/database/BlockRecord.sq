@@ -34,3 +34,13 @@ UPDATE block_record SET answer = :answer, answered_at = :answeredAt WHERE block_
 
 setOutcome:
 UPDATE block_record SET outcome = :outcome, outcome_at = :outcomeAt WHERE block_id = :blockId;
+
+-- Every record, for a backup.
+selectAll:
+SELECT * FROM block_record ORDER BY block_id;
+
+-- A record restored whole, answer and outcome and their times. Only for a block that exists.
+insertRecord:
+INSERT INTO block_record(block_id, answer, answered_at, outcome, outcome_at)
+SELECT :blockId, :answer, :answeredAt, :outcome, :outcomeAt
+WHERE EXISTS (SELECT 1 FROM block WHERE id = :blockId);

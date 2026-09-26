@@ -4,9 +4,11 @@ import com.russhwolf.settings.MapSettings
 import com.russhwolf.settings.ObservableSettings
 import io.github.meko123456.dayblocks.core.common.commonModule
 import io.github.meko123456.dayblocks.core.data.repository.PreferencesSettingsRepository
+import io.github.meko123456.dayblocks.core.data.repository.SqlBackupRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlBlockRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlOutcomeRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlTemplateRepository
+import io.github.meko123456.dayblocks.core.domain.repository.BackupRepository
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
@@ -43,6 +45,7 @@ class DataModuleTest {
             assertIs<SqlTemplateRepository>(app.koin.get<TemplateRepository>())
             assertIs<SqlOutcomeRepository>(app.koin.get<OutcomeRepository>())
             assertIs<PreferencesSettingsRepository>(app.koin.get<SettingsRepository>())
+            assertIs<SqlBackupRepository>(app.koin.get<BackupRepository>())
         } finally {
             app.close()
         }
