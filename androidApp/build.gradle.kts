@@ -50,13 +50,17 @@ android {
 
 dependencies {
     implementation(project(":composeApp"))
+    implementation(project(":core:buddy"))
     implementation(project(":core:common"))
     implementation(project(":core:data"))
     implementation(project(":core:database"))
+    implementation(project(":core:designsystem"))
     implementation(project(":core:domain"))
     implementation(project(":core:notifications"))
 
     implementation(libs.androidx.activity.compose)
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
 }

@@ -27,7 +27,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun openFrom(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_OPEN_TODAY, false) == true) return AppLinks.open(AppLink.Today)
         val request = ReminderIntents.readOpen(intent) ?: return
         if (request.kind == NotificationKind.EndOfDay) AppLinks.open(AppLink.Review(request.date))
+    }
+
+    companion object {
+        /** Set by the widget: open on Today, whatever screen the app was left on. */
+        const val EXTRA_OPEN_TODAY = "io.github.meko123456.dayblocks.extra.OPEN_TODAY"
     }
 }

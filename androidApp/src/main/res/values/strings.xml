@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">DayBlocks</string>
+    <string name="widget_name">Today</string>
+    <string name="widget_description">What\'s on now, what\'s next, and how the buddy feels about it.</string>
 
     <!-- Notification channels: one per kind, so each can be silenced on its own. -->
     <string name="channel_block_start">Block starts</string>
