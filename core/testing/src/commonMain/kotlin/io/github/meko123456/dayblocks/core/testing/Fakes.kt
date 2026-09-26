@@ -1,5 +1,6 @@
 package io.github.meko123456.dayblocks.core.testing
 
+import io.github.meko123456.dayblocks.core.domain.model.AppSettings
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
@@ -123,9 +124,12 @@ class FakeTemplateRepository(initial: List<Template> = emptyList()) : TemplateRe
 class FakeSettingsRepository(initial: BuddySettings = BuddySettings()) : SettingsRepository {
     val buddy = MutableStateFlow(initial)
     val lastOpened = MutableStateFlow<Instant?>(null)
+    val app = MutableStateFlow(AppSettings())
 
     override fun observeBuddy(): Flow<BuddySettings> = buddy
     override suspend fun updateBuddy(change: (BuddySettings) -> BuddySettings) = buddy.update(change)
+    override fun observeApp(): Flow<AppSettings> = app
+    override suspend fun updateApp(change: (AppSettings) -> AppSettings) = app.update(change)
     override fun observeLastOpened(): Flow<Instant?> = lastOpened
     override suspend fun markOpened(at: Instant) {
         lastOpened.value = at

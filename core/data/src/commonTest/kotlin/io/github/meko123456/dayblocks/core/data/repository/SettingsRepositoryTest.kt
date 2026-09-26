@@ -2,7 +2,10 @@ package io.github.meko123456.dayblocks.core.data.repository
 
 import app.cash.turbine.test
 import com.russhwolf.settings.MapSettings
+import io.github.meko123456.dayblocks.core.domain.model.AppSettings
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
+import io.github.meko123456.dayblocks.core.domain.model.Category
+import io.github.meko123456.dayblocks.core.domain.model.ThemeMode
 import io.github.meko123456.dayblocks.core.domain.model.BuddyTone
 import io.github.meko123456.dayblocks.core.domain.model.QuietHours
 import kotlin.test.Test
@@ -53,5 +56,26 @@ class SettingsRepositoryTest {
         val opened = Instant.parse("2026-09-25T06:00:00Z")
         settings.markOpened(opened)
         assertEquals(opened, settings.observeLastOpened().first())
+    }
+
+    @Test
+    fun appSettingsStartFromTheirDefaultsAndKeepWhatIsChosen() = runTest {
+        assertEquals(AppSettings(), settings.observeApp().first())
+        settings.updateApp { it.copy(theme = ThemeMode.Light, timelineStartHour = 5, timelineEndHour = 23, categoryColors = mapOf(Category.Reading to 0xFF00FF00), onboarded = true) }
+        assertEquals(
+            AppSettings(ThemeMode.Light, 5, 23, mapOf(Category.Reading to 0xFF00FF00), onboarded = true),
+            PreferencesSettingsRepository(store).observeApp().first(),
+        )
+        // Clearing a colour goes back to the category's default.
+        settings.updateApp { it.copy(categoryColors = emptyMap()) }
+        assertEquals(emptyMap(), settings.observeApp().first().categoryColors)
+    }
+
+    @Test
+    fun aTimelineThatWouldRunBackwardsFallsBackToTheDefaultHours() = runTest {
+        store.putInt("app.timeline.startHour", 20)
+        store.putInt("app.timeline.endHour", 8)
+        val app = settings.observeApp().first()
+        assertEquals(AppSettings.DEFAULT_TIMELINE_START to AppSettings.DEFAULT_TIMELINE_END, app.timelineStartHour to app.timelineEndHour)
     }
 }

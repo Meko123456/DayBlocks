@@ -1,5 +1,6 @@
 package io.github.meko123456.dayblocks.core.domain.repository
 
+import io.github.meko123456.dayblocks.core.domain.model.AppSettings
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,10 @@ interface SettingsRepository {
 
     /** Applies [change] to the current settings and stores the result. */
     suspend fun updateBuddy(change: (BuddySettings) -> BuddySettings)
+
+    fun observeApp(): Flow<AppSettings>
+
+    suspend fun updateApp(change: (AppSettings) -> AppSettings)
 
     /** When the app last came to the foreground, or null before it ever has. Comebacks count from it. */
     fun observeLastOpened(): Flow<Instant?>
