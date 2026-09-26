@@ -2,6 +2,7 @@ package io.github.meko123456.dayblocks.core.domain
 
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
+import io.github.meko123456.dayblocks.core.domain.usecase.ComputeStreak
 import io.github.meko123456.dayblocks.core.domain.usecase.CopyDay
 import io.github.meko123456.dayblocks.core.domain.usecase.DetectOverlaps
 import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
@@ -31,4 +32,5 @@ val domainModule = module {
     factory { SaveDayAsTemplate(get()) }
     factory { CopyDay(get()) }
     factory { AutoFillDay(get(), get(), get(), get()) }
+    factory { ComputeStreak(get()) }
 }
