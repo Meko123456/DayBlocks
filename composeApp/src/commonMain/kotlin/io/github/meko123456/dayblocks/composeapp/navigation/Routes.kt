@@ -2,6 +2,7 @@ package io.github.meko123456.dayblocks.composeapp.navigation
 
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
+import io.github.meko123456.dayblocks.feature.checkin.CheckinArgs
 import io.github.meko123456.dayblocks.feature.editblock.EditBlockArgs
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -16,7 +17,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object OnboardingRoute
 @Serializable data object TodayRoute
 @Serializable data object TemplatesRoute
-@Serializable data object CheckInRoute
 @Serializable data object StatsRoute
 @Serializable data object SettingsRoute
 
@@ -45,4 +45,10 @@ data class EditBlockRoute(
             prefillEnd = prefill?.endMinutes,
         )
     }
+}
+
+/** The check-in, for [date] or — without one — for the current planning day. */
+@Serializable
+data class CheckInRoute(val date: String? = null) {
+    fun toArgs(): CheckinArgs = CheckinArgs(date = date?.let(LocalDate::parse))
 }

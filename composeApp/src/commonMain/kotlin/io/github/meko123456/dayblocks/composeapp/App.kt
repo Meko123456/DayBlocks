@@ -54,7 +54,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             composable<TodayRoute> {
                 TodayScreen(
                     onOpenEditor = { date, blockId, prefill -> navController.navigate(EditBlockRoute.of(date, blockId, prefill)) },
-                    onOpenCheckIn = { navController.navigate(CheckInRoute) },
+                    onOpenCheckIn = { navController.navigate(CheckInRoute()) },
                     onOpenTemplates = { navController.navigate(TemplatesRoute) },
                     onOpenStats = { navController.navigate(StatsRoute) },
                     onOpenSettings = { navController.navigate(SettingsRoute) },
@@ -65,7 +65,9 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 EditBlockScreen(args = entry.toRoute<EditBlockRoute>().toArgs(), onClose = { navController.popBackStack() })
             }
             composable<TemplatesRoute> { TemplatesScreen(onClose = { navController.popBackStack() }) }
-            composable<CheckInRoute> { CheckinScreen() }
+            composable<CheckInRoute> { entry ->
+                CheckinScreen(args = entry.toRoute<CheckInRoute>().toArgs(), onClose = { navController.popBackStack() })
+            }
             composable<StatsRoute> { StatsScreen() }
             composable<SettingsRoute> { SettingsScreen() }
         }

@@ -24,17 +24,15 @@ import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
 
 /**
  * The buddy and what it is saying: its face, and a speech bubble whose corner points back at it.
- * Tapping the face is how it is renamed.
+ * Where [onFaceTapped] is given — on Today — tapping the face renames it.
  */
 @Composable
-fun BuddySays(name: String, mood: BuddyMood, line: String, onFaceTapped: () -> Unit, modifier: Modifier = Modifier) {
+fun BuddySays(name: String, mood: BuddyMood, line: String, modifier: Modifier = Modifier, onFaceTapped: (() -> Unit)? = null) {
     Row(modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        val face = Modifier.clip(CircleShape).semantics { contentDescription = "$name, ${mood.spoken}" }
         BuddyFace(
             mood,
-            Modifier
-                .clip(CircleShape)
-                .clickable(onClickLabel = "Rename $name", onClick = onFaceTapped)
-                .semantics { contentDescription = "$name, ${mood.spoken}" },
+            if (onFaceTapped != null) face.clickable(onClickLabel = "Rename $name", onClick = onFaceTapped) else face,
         )
         Spacer(Modifier.width(8.dp))
         Surface(
