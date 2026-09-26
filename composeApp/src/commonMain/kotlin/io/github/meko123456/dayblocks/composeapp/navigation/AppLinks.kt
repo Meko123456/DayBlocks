@@ -9,6 +9,9 @@ import kotlinx.datetime.LocalDate
 sealed interface AppLink {
     /** The review notification: that day's check-in. */
     data class Review(val date: LocalDate?) : AppLink
+
+    /** A widget: Today, whatever screen the app was left on. */
+    data object Today : AppLink
 }
 
 /**

@@ -54,12 +54,13 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             onPauseOrDispose { }
         }
         val navController = rememberNavController()
-        // A tapped review notification opens that day's check-in, whether it launched the app or
-        // arrived while it was open.
+        // A tapped review notification opens that day's check-in, and a tapped widget opens Today,
+        // whether the tap launched the app or arrived while it was open.
         val link by AppLinks.next.collectAsState()
         LaunchedEffect(link) {
             when (val opened = link) {
                 is AppLink.Review -> navController.navigate(CheckInRoute(opened.date?.toString()))
+                AppLink.Today -> navController.popBackStack(TodayRoute, inclusive = false)
                 null -> Unit
             }
             if (link != null) AppLinks.consumed()
