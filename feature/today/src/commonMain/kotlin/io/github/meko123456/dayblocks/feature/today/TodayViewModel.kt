@@ -9,6 +9,7 @@ import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
 import io.github.meko123456.dayblocks.core.common.minuteTicks
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
+import io.github.meko123456.dayblocks.core.domain.model.AppSettings
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
@@ -92,7 +93,7 @@ class TodayViewModel(
                 }
             }
         launchInScope {
-            combine(ticks, days, settings.observeBuddy()) { now, day, buddy -> render(now, day, buddy) }
+            combine(ticks, days, settings.observeBuddy(), settings.observeApp()) { now, day, buddy, app -> render(now, day, buddy, app) }
                 // The rename draft is the user's, not the clock's: a redraw must not close the dialog.
                 .collect { next -> reduce { next.copy(renaming = renaming) } }
         }
@@ -123,11 +124,11 @@ class TodayViewModel(
         }
     }
 
-    private fun render(now: Instant, day: Day, buddy: BuddySettings): TodayState {
+    private fun render(now: Instant, day: Day, buddy: BuddySettings, app: AppSettings): TodayState {
         val zone = clock.zone()
         val resolved = resolveNow(day.yesterday + day.today, now, zone)
         val nowMinute = minuteOfPlanDay(now, day.date)
-        val window = windowFor(day.today, nowMinute)
+        val window = windowFor(day.today, nowMinute, DaySpan(app.timelineStartHour * 60, app.timelineEndHour * 60))
 
         val blockItems = day.today.map { block ->
             val status = when {
@@ -192,7 +193,7 @@ class TodayViewModel(
     }
 
     /**
-     * The default window widened to hold every block and the current time, snapped to whole hours
+     * The hours chosen in Settings, widened to hold every block and the current time, snapped to whole hours
      * so the hour labels line up. A plan that runs to 02:00 gets a timeline that does too.
      *
      * Never more than a day, though: a timeline is one lap of the clock. With the example plan —
@@ -200,8 +201,7 @@ class TodayViewModel(
      * draw 06:00–08:00 twice. So the window stops a day after it starts, and a block running past
      * the end is drawn clipped, which is how every calendar shows an overnight event.
      */
-    private fun windowFor(today: List<TimeBlock>, nowMinute: Int): DaySpan {
-        val default = TodayState.DEFAULT_WINDOW
+    private fun windowFor(today: List<TimeBlock>, nowMinute: Int, default: DaySpan): DaySpan {
         val earliest = listOfNotNull(default.startMinutes, today.minOfOrNull { it.span.startMinutes }, nowMinute.takeIf { it >= 0 }).min()
         val latest = listOfNotNull(default.endMinutes, today.maxOfOrNull { it.span.endMinutes }, nowMinute + 1).max()
         val start = (earliest / 60) * 60

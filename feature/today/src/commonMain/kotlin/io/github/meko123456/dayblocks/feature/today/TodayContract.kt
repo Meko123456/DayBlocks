@@ -28,7 +28,7 @@ data class TodayState(
     val renaming: String? = null,
 ) {
     companion object {
-        /** 06:00 to midnight, widened as needed so no block and not the current time falls off. */
+        /** 06:00 to midnight until Settings says otherwise, widened as needed so no block falls off. */
         val DEFAULT_WINDOW: DaySpan = DaySpan(6 * 60, 24 * 60)
     }
 }

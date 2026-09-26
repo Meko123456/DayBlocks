@@ -59,7 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
-import io.github.meko123456.dayblocks.core.designsystem.defaultColor
+import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
@@ -211,7 +211,7 @@ private fun Header(state: TodayState, onIntent: (TodayIntent) -> Unit) {
 
 @Composable
 private fun NowCardView(now: NowCard, is24Hour: Boolean, modifier: Modifier = Modifier) {
-    val accent = now.current?.category?.defaultColor ?: MaterialTheme.colorScheme.primary
+    val accent = now.current?.category?.color ?: MaterialTheme.colorScheme.primary
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -325,7 +325,7 @@ private fun Timeline(
 @Composable
 private fun BlockTile(item: TimelineItem.Block, is24Hour: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val block: TimeBlock = item.block
-    val color = block.category.defaultColor
+    val color = block.category.color
     val shape = RoundedCornerShape(12.dp)
     val current = item.status == BlockStatus.Current
     Box(

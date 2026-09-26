@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
-import io.github.meko123456.dayblocks.core.designsystem.defaultColor
+import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
 import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome
 import org.koin.compose.viewmodel.koinViewModel
@@ -117,7 +117,7 @@ private fun BlockRow(row: CheckinRow, is24Hour: Boolean, onIntent: (CheckinInten
     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp), colors = surfaceCard(), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.width(4.dp).height(32.dp).clip(RoundedCornerShape(2.dp)).background(row.block.category.defaultColor))
+                Box(Modifier.width(4.dp).height(32.dp).clip(RoundedCornerShape(2.dp)).background(row.block.category.color))
                 Column(Modifier.padding(start = 12.dp)) {
                     Text(row.block.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(
