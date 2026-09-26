@@ -59,6 +59,18 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(bloop.waitForExistence(timeout: 10), "the buddy did not take its new name")
     }
 
+    func testRatingABlockAtTheCheckInScoresTheDay() {
+        addBlock("Deep work")
+        app.buttons["Check-in"].tap()
+        XCTAssertTrue(app.staticTexts["How did today go?"].waitForExistence(timeout: 10), "the check-in never opened")
+        XCTAssertTrue(app.staticTexts["Nothing rated yet"].exists)
+
+        let done = app.descendants(matching: .any).matching(NSPredicate(format: "label == 'Done'")).firstMatch
+        XCTAssertTrue(done.waitForExistence(timeout: 5))
+        done.tap()
+        XCTAssertTrue(app.staticTexts["100%"].waitForExistence(timeout: 10), "rating the only block did not score the day")
+    }
+
     func testTurningOnRemindersAsksIOSAndClearsTheNotice() {
         XCTAssertTrue(app.staticTexts["NOW"].waitForExistence(timeout: 20))
         let notice = app.staticTexts.matching(NSPredicate(format: "label CONTAINS \"can't reach you\"")).firstMatch
