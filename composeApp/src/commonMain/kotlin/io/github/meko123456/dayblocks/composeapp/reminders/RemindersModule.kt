@@ -8,6 +8,6 @@ import org.koin.dsl.module
  * NotificationScheduler and ClockStyle it needs.
  */
 val remindersModule = module {
-    single { ReminderRescheduler(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    single { ReminderRescheduler(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ReminderResponder(get(), get(), get()) }
 }

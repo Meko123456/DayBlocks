@@ -1,10 +1,12 @@
 package io.github.meko123456.dayblocks.composeapp.reminders
 
+import io.github.meko123456.dayblocks.core.buddy.BuddyVoice
+import io.github.meko123456.dayblocks.core.buddy.MessagePools
 import io.github.meko123456.dayblocks.core.buddy.NotificationPlanner
-import io.github.meko123456.dayblocks.core.buddy.PlainVoice
 import io.github.meko123456.dayblocks.core.common.OffsetTimeProvider
 import io.github.meko123456.dayblocks.core.common.TimeProvider
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
+import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome
 import io.github.meko123456.dayblocks.core.domain.model.Category
 import io.github.meko123456.dayblocks.core.domain.model.CheckInAnswer
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
@@ -16,10 +18,13 @@ import io.github.meko123456.dayblocks.core.domain.model.TemplateId
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
+import io.github.meko123456.dayblocks.core.domain.usecase.ComputeStreak
 import io.github.meko123456.dayblocks.core.domain.usecase.GenerateDayFromTemplate
+import io.github.meko123456.dayblocks.core.domain.usecase.ScoreAdherence
 import io.github.meko123456.dayblocks.core.notifications.NotificationScheduler
 import io.github.meko123456.dayblocks.core.testing.FakeBlockRepository
 import io.github.meko123456.dayblocks.core.testing.FakeOutcomeRepository
+import io.github.meko123456.dayblocks.core.testing.FakeSettingsRepository
 import io.github.meko123456.dayblocks.core.testing.FakeTemplateRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,6 +39,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 
@@ -44,6 +50,7 @@ class ReminderReschedulerTest {
     private val blocks = FakeBlockRepository()
     private val outcomes = FakeOutcomeRepository(blocks)
     private val templates = FakeTemplateRepository()
+    private val settings = FakeSettingsRepository()
     private val scheduler = RecordingScheduler()
     private var generated = 0
 
@@ -54,9 +61,10 @@ class ReminderReschedulerTest {
         OffsetTimeProvider(start.toInstant(zone), zone) { testScheduler.currentTime }
 
     private fun rescheduler(clock: TimeProvider) = ReminderRescheduler(
-        blocks, outcomes, templates,
+        blocks, outcomes, templates, settings,
         AutoFillDay(blocks, templates, GenerateDayFromTemplate { "generated-${++generated}" }, clock),
-        NotificationPlanner(PlainVoice()), scheduler, clock, { true }, PlanningDayRule(),
+        ComputeStreak(ScoreAdherence()),
+        NotificationPlanner(BuddyVoice(MessagePools.Default.firstLinesOnly())), scheduler, clock, { true }, PlanningDayRule(),
     )
 
     @Test
@@ -120,6 +128,38 @@ class ReminderReschedulerTest {
         ReminderResponder(outcomes, clock, rescheduler(clock)).answer(BlockId("deleted-since"), CheckInAnswer.OnIt)
         assertTrue(outcomes.observeDay(monday).first().isEmpty())
         assertEquals(1, scheduler.passes.size, "and the schedule is still rebuilt")
+    }
+
+    @Test
+    fun aRenamedBuddyIsHeardUnderItsNewNameStraightAway() = runTest {
+        blocks.upsert(block("read", monday, 13 * 60, 15 * 60))
+        rescheduler(clockAt(LocalDateTime(2026, 9, 21, 9, 0))).start(backgroundScope)
+        runCurrent()
+        advanceTimeBy(ReminderRescheduler.SETTLE + 1.milliseconds)
+        assertTrue(scheduler.last.all { it.title == "Kubi" })
+
+        settings.buddy.value = settings.buddy.value.copy(name = "Bloop")
+        runCurrent()
+        advanceTimeBy(ReminderRescheduler.SETTLE + 1.milliseconds)
+        assertTrue(scheduler.last.isNotEmpty() && scheduler.last.all { it.title == "Bloop" }, "${scheduler.last}")
+    }
+
+    @Test
+    fun aStreakInTheHistoryIsProtectedOnTheMorningOfAPlannedDay() = runTest {
+        // Three days followed, then today planned.
+        for (daysAgo in 1..3) {
+            val date = LocalDate(2026, 9, 21 - daysAgo)
+            val done = block("done-$daysAgo", date, 9 * 60, 10 * 60)
+            blocks.upsert(done)
+            outcomes.recordOutcome(done.id, BlockOutcome.Done, LocalDateTime(date, LocalTime(10, 0)).toInstant(zone))
+        }
+        blocks.upsert(block("today", monday, 11 * 60, 12 * 60))
+
+        rescheduler(clockAt(LocalDateTime(2026, 9, 21, 7, 0))).rescheduleNow()
+
+        val streak = scheduler.last.single { it.kind == NotificationKind.Streak }
+        assertEquals(LocalDateTime(2026, 9, 21, 9, 0).toInstant(zone), streak.at)
+        assertEquals("You've followed your plan 3 days in a row 🔥 Don't break it today!", streak.body)
     }
 
     private class RecordingScheduler : NotificationScheduler {

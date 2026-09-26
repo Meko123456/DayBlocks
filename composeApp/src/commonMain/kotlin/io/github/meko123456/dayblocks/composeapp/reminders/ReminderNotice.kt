@@ -10,8 +10,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -19,7 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import io.github.meko123456.dayblocks.core.buddy.DEFAULT_BUDDY_NAME
+import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
+import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -32,6 +36,8 @@ import org.koin.compose.koinInject
 @Composable
 fun ReminderNotice(modifier: Modifier = Modifier) {
     val rescheduler = koinInject<ReminderRescheduler>()
+    val settings = koinInject<SettingsRepository>()
+    val name by remember(settings) { settings.observeBuddy().map { it.name } }.collectAsState(BuddySettings.DEFAULT_NAME)
     val scope = rememberCoroutineScope()
     val access = rememberReminderAccess(onGranted = { scope.launch { rescheduler.rescheduleNow() } })
     var dismissed by rememberSaveable { mutableStateOf(false) }
@@ -39,14 +45,14 @@ fun ReminderNotice(modifier: Modifier = Modifier) {
 
     val notice = when {
         access.notificationsAllowed == false -> Notice(
-            title = "$DEFAULT_BUDDY_NAME can't reach you",
-            text = "Turn on notifications and $DEFAULT_BUDDY_NAME will tell you when a block starts, and check in halfway through.",
+            title = "$name can't reach you",
+            text = "Turn on notifications and $name will tell you when a block starts, and check in halfway through.",
             action = "Turn on",
             onAction = access::requestNotifications,
         )
         access.notificationsAllowed == true && !access.exactTimingAllowed -> Notice(
             title = "Reminders may run late",
-            text = "Allow alarms & reminders so $DEFAULT_BUDDY_NAME is on time to the minute, not whenever the phone next wakes.",
+            text = "Allow alarms & reminders so $name is on time to the minute, not whenever the phone next wakes.",
             action = "Allow",
             onAction = access::openExactTimingSettings,
         )

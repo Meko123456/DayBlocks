@@ -1,49 +1,51 @@
 package io.github.meko123456.dayblocks.core.buddy
 
 import io.github.meko123456.dayblocks.core.common.formatDuration
+import io.github.meko123456.dayblocks.core.domain.model.BuddyTone
 import io.github.meko123456.dayblocks.core.domain.model.Category
-import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 
 /** A notification's two lines: who is speaking, and what they say. */
 data class Line(val title: String, val body: String)
 
-/**
- * What the buddy says in each situation. [NotificationPlanner] decides *when* something is said;
- * this decides the words, so the two can change independently.
- */
-interface BuddyVoice {
-    /** [clock] is the start as the user's own clock reads it; [minutes] is how long it really lasts. */
-    fun blockStart(block: TimeBlock, clock: String, minutes: Int): Line
-    fun checkIn(block: TimeBlock, minutesLeft: Int): Line
-    fun backOnTrack(block: TimeBlock, minutesLeft: Int): Line
-    fun planTomorrow(): Line
-    fun planToday(): Line
-    fun reviewDay(): Line
-}
+/** The values a template's placeholders are filled from. Only a situation's own are set. */
+data class Slots(
+    val title: String? = null,
+    val emoji: String? = null,
+    val time: String? = null,
+    val length: String? = null,
+    val left: String? = null,
+    val streak: Int? = null,
+    val next: String? = null,
+    val nextTime: String? = null,
+)
 
 /**
- * One line per situation — the spec's own examples. The buddy engine replaces it with a pool of
- * lines per situation, rotated and in the chosen tone; the planner does not change when it does.
+ * Picks a line and fills it in. Which line is decided by [rotation], so the choice is the caller's
+ * to make stable: the planner numbers each situation's occurrences through the day, and Today uses
+ * the block on screen, so the same notification keeps its words and back-to-back ones differ.
  */
-class PlainVoice(private val name: String = DEFAULT_BUDDY_NAME) : BuddyVoice {
-    override fun blockStart(block: TimeBlock, clock: String, minutes: Int) =
-        Line(name, "Hey! It's $clock. Time for ${block.quoted} ${block.category.emoji} You've got ${spokenLength(minutes)}.")
+class BuddyVoice(private val pools: MessagePools = MessagePools.Default) {
 
-    override fun checkIn(block: TimeBlock, minutesLeft: Int) =
-        Line(name, "Still on ${block.quoted}? Or did the phone win again? 👀")
+    fun line(situation: Situation, tone: BuddyTone, name: String, rotation: Int, slots: Slots): Line =
+        Line(title = name, body = pools.lines(situation, tone).pick(rotation).fill(slots, name))
 
-    override fun backOnTrack(block: TimeBlock, minutesLeft: Int) =
-        Line(name, "No stress, ${formatDuration(minutesLeft)} left. Let's go back to it.")
-
-    override fun planTomorrow() = Line(name, "Tomorrow's still empty. Want to plan it in 2 minutes?")
-
-    override fun planToday() = Line(name, "Today's still a blank page. Plan just one block?")
-
-    override fun reviewDay() = Line(name, "How did today go? Tap to review.")
+    fun bubble(bubble: Bubble, name: String, rotation: Int, slots: Slots): String =
+        pools.lines(bubble).pick(rotation).fill(slots, name)
 }
 
-/** The buddy's name until the user picks one. */
-const val DEFAULT_BUDDY_NAME: String = "Kubi"
+private fun List<String>.pick(rotation: Int): String = this[rotation.mod(size)]
+
+internal fun String.fill(slots: Slots, name: String): String = this
+    .replace("{name}", name)
+    .replace("{title}", slots.title?.let { "“$it”" }.orEmpty())
+    .replace("{emoji}", slots.emoji.orEmpty())
+    .replace("{time}", slots.time.orEmpty())
+    .replace("{length}", slots.length.orEmpty())
+    .replace("{left}", slots.left.orEmpty())
+    .replace("{streakNext}", slots.streak?.plus(1)?.toString().orEmpty())
+    .replace("{streak}", slots.streak?.toString().orEmpty())
+    .replace("{next}", slots.next?.let { "“$it”" }.orEmpty())
+    .replace("{nextTime}", slots.nextTime.orEmpty())
 
 /** The emoji a line about this category ends on. */
 val Category.emoji: String
@@ -67,5 +69,16 @@ internal fun spokenLength(minutes: Int): String = when {
     else -> formatDuration(minutes)
 }
 
-/** The title in quotes, so any phrasing reads as a name: Time for “Read Dune”. */
-private val TimeBlock.quoted: String get() = "“$title”"
+/**
+ * FNV-1a over the characters. Here rather than `hashCode()`, which Kotlin does not promise to be
+ * the same on every platform — and a line that differed between an iPhone and an Android phone
+ * for the same plan would be a bug nobody could reproduce.
+ */
+internal fun stableHash(text: String): Int {
+    var hash = 0x811C9DC5.toInt()
+    for (c in text) {
+        hash = hash xor c.code
+        hash *= 0x01000193
+    }
+    return hash and Int.MAX_VALUE
+}

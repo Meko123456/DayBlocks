@@ -8,9 +8,11 @@ import io.github.meko123456.dayblocks.core.common.TimeProvider
 import io.github.meko123456.dayblocks.core.common.minuteTicks
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
+import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import io.github.meko123456.dayblocks.core.domain.repository.TemplateRepository
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
+import io.github.meko123456.dayblocks.core.domain.usecase.ComputeStreak
 import io.github.meko123456.dayblocks.core.notifications.NotificationScheduler
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
@@ -37,8 +39,8 @@ import kotlinx.datetime.toLocalDateTime
  * Keeps what the platform has pending in step with the plan.
  *
  * Everything that could change a notification ends in one [rescheduleNow], which rebuilds the whole
- * window: a block edited, a template applied or assigned, an answer given, a new planning day, the
- * app opened, the device rebooted or moved to another time zone. Rebuilding rather than patching is
+ * window: a block edited, a template applied or assigned, an answer given, a setting changed, a new
+ * planning day, the app opened, the device rebooted or moved to another time zone. Rebuilding rather than patching is
  * what makes it trustworthy — what is pending is always exactly what the planner says about the plan
  * as it is now, whatever happened in between.
  */
@@ -46,7 +48,9 @@ class ReminderRescheduler(
     private val blocks: BlockRepository,
     private val outcomes: OutcomeRepository,
     private val templates: TemplateRepository,
+    private val settings: SettingsRepository,
     private val autoFill: AutoFillDay,
+    private val computeStreak: ComputeStreak,
     private val planner: NotificationPlanner,
     private val scheduler: NotificationScheduler,
     private val clock: TimeProvider,
@@ -73,7 +77,19 @@ class ReminderRescheduler(
                 PlannedDay(date, planned[date].orEmpty(), outcomes.observeDay(date).first())
             }
             val templated = templates.observeWeekdayAssignments().first().keys
-            scheduler.replaceAll(planner.plan(PlanInput(now, zone, clockStyle.is24Hour(), days, templated, rule)))
+            val streak = computeStreak(first, { blocks.observeDay(it).first() }, { outcomes.observeDay(it).first() })
+            val input = PlanInput(
+                now = now,
+                zone = zone,
+                is24Hour = clockStyle.is24Hour(),
+                days = days,
+                templatedWeekdays = templated,
+                settings = settings.observeBuddy().first(),
+                streak = streak,
+                lastOpened = settings.observeLastOpened().first(),
+                rule = rule,
+            )
+            scheduler.replaceAll(planner.plan(input))
         }
     }
 
@@ -91,11 +107,16 @@ class ReminderRescheduler(
             .collect { rescheduleNow() }
     }
 
-    private fun changesAround(today: LocalDate): Flow<List<Any>> {
+    private fun changesAround(today: LocalDate): Flow<List<Any?>> {
         val from = today.minus(1, DateTimeUnit.DAY)
         val to = today.plus(2, DateTimeUnit.DAY)
-        val sources: List<Flow<Any>> = listOf(blocks.observeRange(from, to), templates.observeWeekdayAssignments()) +
-            from.through(to).map { outcomes.observeDay(it) }
+        // A name, a tone or quiet hours changed; the app opened, which moves the comebacks along.
+        val sources: List<Flow<Any?>> = listOf(
+            blocks.observeRange(from, to),
+            templates.observeWeekdayAssignments(),
+            settings.observeBuddy(),
+            settings.observeLastOpened(),
+        ) + from.through(to).map { outcomes.observeDay(it) }
         return combine(sources) { it.toList() }
     }
 
