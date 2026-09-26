@@ -3,20 +3,22 @@ package io.github.meko123456.dayblocks.core.testing
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
+import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.model.CheckInAnswer
+import io.github.meko123456.dayblocks.core.domain.model.Template
+import io.github.meko123456.dayblocks.core.domain.model.TemplateId
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
+import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import io.github.meko123456.dayblocks.core.domain.repository.TemplateRepository
-import io.github.meko123456.dayblocks.core.domain.model.Template
-import io.github.meko123456.dayblocks.core.domain.model.TemplateId
-import kotlinx.datetime.DayOfWeek
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 
 /**
@@ -115,4 +117,17 @@ class FakeTemplateRepository(initial: List<Template> = emptyList()) : TemplateRe
     }
 
     override suspend fun claimAutoFill(date: LocalDate, at: Instant): Boolean = claimed.add(date)
+}
+
+/** Settings in memory, validated the way the real store's reads are: only valid settings exist. */
+class FakeSettingsRepository(initial: BuddySettings = BuddySettings()) : SettingsRepository {
+    val buddy = MutableStateFlow(initial)
+    val lastOpened = MutableStateFlow<Instant?>(null)
+
+    override fun observeBuddy(): Flow<BuddySettings> = buddy
+    override suspend fun updateBuddy(change: (BuddySettings) -> BuddySettings) = buddy.update(change)
+    override fun observeLastOpened(): Flow<Instant?> = lastOpened
+    override suspend fun markOpened(at: Instant) {
+        lastOpened.value = at
+    }
 }

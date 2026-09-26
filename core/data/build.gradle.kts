@@ -20,6 +20,8 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
             implementation(libs.turbine)
+            // MapSettings: the settings store's tests run against an in-memory ObservableSettings.
+            implementation(libs.multiplatform.settings.test)
         }
         // The repositories' tests run against real SQLite on both platforms: sqlite-jdbc on the
         // JVM, and on iOS the system SQLite through :core:database's own DriverFactory.

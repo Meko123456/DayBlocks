@@ -6,6 +6,7 @@ import io.github.meko123456.dayblocks.composeapp.di.initKoin
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderRescheduler
 import io.github.meko123456.dayblocks.core.common.AndroidClockStyle
 import io.github.meko123456.dayblocks.core.common.ClockStyle
+import io.github.meko123456.dayblocks.core.data.SettingsFactory
 import io.github.meko123456.dayblocks.core.database.DriverFactory
 import io.github.meko123456.dayblocks.core.notifications.AlarmNotificationScheduler
 import io.github.meko123456.dayblocks.core.notifications.NotificationScheduler
@@ -53,6 +54,7 @@ class DayBlocksApplication : Application() {
 
 private val androidModule = module {
     single { DriverFactory(get()) }
+    single { SettingsFactory(androidContext()) }
     single<ClockStyle> { AndroidClockStyle(androidContext()) }
     single<NotificationScheduler> {
         AlarmNotificationScheduler(androidContext(), NotificationReceiver::class.java, RescheduleReceiver::class.java)

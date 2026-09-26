@@ -1,11 +1,15 @@
 package io.github.meko123456.dayblocks.core.data
 
+import com.russhwolf.settings.MapSettings
+import com.russhwolf.settings.ObservableSettings
 import io.github.meko123456.dayblocks.core.common.commonModule
+import io.github.meko123456.dayblocks.core.data.repository.PreferencesSettingsRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlBlockRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlOutcomeRepository
 import io.github.meko123456.dayblocks.core.data.repository.SqlTemplateRepository
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
+import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import io.github.meko123456.dayblocks.core.domain.repository.TemplateRepository
 import io.github.meko123456.dayblocks.database.DayBlocksDatabase
 import kotlin.test.AfterTest
@@ -28,12 +32,17 @@ class DataModuleTest {
     @Test
     fun everyRepositoryResolvesAgainstTheSharedModules() {
         val app = koinApplication {
-            modules(commonModule, dataModule, module { single { DayBlocksDatabase(driver) } })
+            // The settings store is replaced by an in-memory one, as the database is by a test driver.
+            modules(commonModule, dataModule, module {
+                single { DayBlocksDatabase(driver) }
+                single<ObservableSettings> { MapSettings() }
+            })
         }
         try {
             assertIs<SqlBlockRepository>(app.koin.get<BlockRepository>())
             assertIs<SqlTemplateRepository>(app.koin.get<TemplateRepository>())
             assertIs<SqlOutcomeRepository>(app.koin.get<OutcomeRepository>())
+            assertIs<PreferencesSettingsRepository>(app.koin.get<SettingsRepository>())
         } finally {
             app.close()
         }
