@@ -1,5 +1,7 @@
 package io.github.meko123456.dayblocks.composeapp
 
+import io.github.meko123456.dayblocks.composeapp.navigation.AppLink
+import io.github.meko123456.dayblocks.composeapp.navigation.AppLinks
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderRescheduler
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderResponder
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
@@ -10,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 import org.koin.mp.KoinPlatform
 import platform.Foundation.NSLog
 
@@ -58,4 +61,9 @@ fun answerReminder(blockId: String, answer: String, done: () -> Unit) {
             done()
         }
     }
+}
+
+/** When the review notification itself is tapped: open that day's check-in. [date] is ISO, or null. */
+fun openReview(date: String?) {
+    AppLinks.open(AppLink.Review(date?.let { runCatching { LocalDate.parse(it) }.getOrNull() }))
 }

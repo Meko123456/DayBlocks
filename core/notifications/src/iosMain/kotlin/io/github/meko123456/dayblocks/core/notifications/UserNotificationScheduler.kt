@@ -61,6 +61,7 @@ class UserNotificationScheduler(
                 buildMap<Any?, Any?> {
                     put(USER_INFO_KIND, notification.kind.name)
                     notification.blockId?.let { put(USER_INFO_BLOCK, it.value) }
+                    notification.date?.let { put(USER_INFO_DATE, it.toString()) }
                 },
             )
         }
@@ -100,9 +101,10 @@ fun registerNotificationCategories(center: UNUserNotificationCenter = UNUserNoti
 /** A check-in's category: the one that carries the answer buttons. */
 const val CHECK_IN_CATEGORY: String = "CHECK_IN"
 
-/** userInfo keys. The Swift notification delegate reads the block from [USER_INFO_BLOCK]. */
+/** userInfo keys. The Swift notification delegate reads the block, the kind and the date from them. */
 const val USER_INFO_BLOCK: String = "blockId"
 const val USER_INFO_KIND: String = "kind"
+const val USER_INFO_DATE: String = "date"
 
 private const val PENDING_LIMIT = 64
 

@@ -51,7 +51,7 @@ internal object ReminderNotifications {
             .setStyle(NotificationCompat.BigTextStyle().bigText(delivery.body))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(if (delivery.kind.importance >= NotificationManager.IMPORTANCE_HIGH) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(openApp(context))
+            .setContentIntent(openApp(context, delivery))
             .setAutoCancel(true)
         delivery.actions.forEach { answer ->
             builder.addAction(0, context.getString(answer.label), answerIntent(context, delivery, answer))
@@ -63,9 +63,10 @@ internal object ReminderNotifications {
         NotificationManagerCompat.from(context).cancel(notificationId, NOTIFICATION_ID)
     }
 
-    private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
+    /** Opens the app; the review opens its day's check-in. */
+    private fun openApp(context: Context, delivery: Delivery): PendingIntent = PendingIntent.getActivity(
         context, 0,
-        Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        ReminderIntents.open(context, MainActivity::class.java, delivery).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 

@@ -1,6 +1,7 @@
 package io.github.meko123456.dayblocks.core.domain.model
 
 import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
 
 /**
  * One notification waiting to be delivered: what the buddy will say, and when.
@@ -24,6 +25,8 @@ data class ScheduledNotification(
     val body: String,
     val blockId: BlockId? = null,
     val actions: List<CheckInAnswer> = emptyList(),
+    /** The planning day it is about, where that matters: tapping the review opens that day's check-in. */
+    val date: LocalDate? = null,
 ) {
     init {
         require(actions.isEmpty() || blockId != null) { "an answer needs a block to answer for" }

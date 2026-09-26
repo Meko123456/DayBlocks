@@ -25,10 +25,17 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        guard Self.answers.contains(response.actionIdentifier),
-              let block = response.notification.request.content.userInfo["blockId"] as? String
-        else {
-            completionHandler() // a tap on the notification itself just opens the app
+        let info = response.notification.request.content.userInfo
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            // A tap on the notification itself opens the app; the review opens its day's check-in.
+            if info["kind"] as? String == "EndOfDay" {
+                RemindersIosKt.openReview(date: info["date"] as? String)
+            }
+            completionHandler()
+            return
+        }
+        guard Self.answers.contains(response.actionIdentifier), let block = info["blockId"] as? String else {
+            completionHandler()
             return
         }
         RemindersIosKt.answerReminder(blockId: block, answer: response.actionIdentifier) {

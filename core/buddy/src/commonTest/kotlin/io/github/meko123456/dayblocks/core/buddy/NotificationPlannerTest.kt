@@ -221,6 +221,7 @@ class NotificationPlannerTest {
         val review = plan(at(monday, 8), day(monday, work, read, sleep)).single { it.kind == EndOfDay }
         assertEquals(at(monday, 21, 10), review.at)
         assertEquals("review:2026-09-21", review.id)
+        assertEquals(monday, review.date, "tapping it opens that day's check-in")
         assertEquals("How did today go? Tap to review.", review.body)
 
         val reviewed = listOf(work, read, sleep).associate { it.id to BlockRecord(it.id, outcome = BlockOutcome.Done) }

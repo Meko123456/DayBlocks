@@ -2,12 +2,17 @@ package io.github.meko123456.dayblocks.composeapp
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import io.github.meko123456.dayblocks.composeapp.navigation.AppLink
+import io.github.meko123456.dayblocks.composeapp.navigation.AppLinks
 import io.github.meko123456.dayblocks.composeapp.navigation.CheckInRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.EditBlockRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.OnboardingRoute
@@ -49,6 +54,16 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             onPauseOrDispose { }
         }
         val navController = rememberNavController()
+        // A tapped review notification opens that day's check-in, whether it launched the app or
+        // arrived while it was open.
+        val link by AppLinks.next.collectAsState()
+        LaunchedEffect(link) {
+            when (val opened = link) {
+                is AppLink.Review -> navController.navigate(CheckInRoute(opened.date?.toString()))
+                null -> Unit
+            }
+            if (link != null) AppLinks.consumed()
+        }
         NavHost(navController = navController, startDestination = TodayRoute) {
             composable<OnboardingRoute> { OnboardingScreen() }
             composable<TodayRoute> {

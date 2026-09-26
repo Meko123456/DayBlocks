@@ -167,7 +167,7 @@ class NotificationPlanner(private val voice: BuddyVoice) {
         if (waking.isEmpty()) return null
         if (day.blocks.all { day.records[it.id]?.outcome != null }) return null
         val at = waking.maxOf { it.endInstant(zone) } + REVIEW_DELAY
-        return Candidate("review:${day.date}", at, NotificationKind.EndOfDay, Situation.ReviewDay, Slots())
+        return Candidate("review:${day.date}", at, NotificationKind.EndOfDay, Situation.ReviewDay, Slots(), date = day.date)
     }
 
     /**
@@ -256,6 +256,7 @@ private data class Candidate(
     val blockId: BlockId? = null,
     val actions: List<CheckInAnswer> = emptyList(),
     val quiet: Quiet = Quiet.Drop,
+    val date: LocalDate? = null,
 ) {
     fun throughQuietHours(hours: QuietHours, zone: TimeZone): Candidate? {
         val local = at.toLocalDateTime(zone)
@@ -267,7 +268,7 @@ private data class Candidate(
 
     fun spoken(voice: BuddyVoice, settings: BuddySettings, rotation: Int): ScheduledNotification {
         val line = voice.line(situation, settings.tone, settings.name, rotation, slots)
-        return ScheduledNotification(id = id, at = at, kind = kind, title = line.title, body = line.body, blockId = blockId, actions = actions)
+        return ScheduledNotification(id = id, at = at, kind = kind, title = line.title, body = line.body, blockId = blockId, actions = actions, date = date)
     }
 }
 
