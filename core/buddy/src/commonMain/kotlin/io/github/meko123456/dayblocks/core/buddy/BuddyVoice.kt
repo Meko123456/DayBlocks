@@ -17,6 +17,7 @@ data class Slots(
     val streak: Int? = null,
     val next: String? = null,
     val nextTime: String? = null,
+    val score: Int? = null,
 )
 
 /**
@@ -46,6 +47,7 @@ internal fun String.fill(slots: Slots, name: String): String = this
     .replace("{streak}", slots.streak?.toString().orEmpty())
     .replace("{next}", slots.next?.let { "“$it”" }.orEmpty())
     .replace("{nextTime}", slots.nextTime.orEmpty())
+    .replace("{score}", slots.score?.toString().orEmpty())
 
 /** The emoji a line about this category ends on. */
 val Category.emoji: String

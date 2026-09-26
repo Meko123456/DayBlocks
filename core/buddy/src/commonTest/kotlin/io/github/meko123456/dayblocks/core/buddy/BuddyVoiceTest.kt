@@ -8,7 +8,7 @@ import kotlin.test.assertTrue
 class BuddyVoiceTest {
     private val everySlot = Slots(
         title = "Reading", emoji = "📖", time = "13:00", length = "2 hours", left = "1h 20m",
-        streak = 6, next = "Gym", nextTime = "18:00",
+        streak = 6, next = "Gym", nextTime = "18:00", score = 82,
     )
 
     @Test

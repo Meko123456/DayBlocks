@@ -6,7 +6,12 @@ import io.github.meko123456.dayblocks.core.domain.model.BuddyTone
 enum class Situation { BlockStart, CheckIn, BackOnTrack, PlanTomorrow, PlanToday, Streak, Comeback, ReviewDay }
 
 /** What the speech bubble on Today is about. */
-enum class Bubble { Night, SleepBlock, EmptyDay, RunningGood, RunningSteady, RunningBehind, Free, DoneGood, DoneSteady, DoneBehind }
+enum class Bubble {
+    Night, SleepBlock, EmptyDay, RunningGood, RunningSteady, RunningBehind, Free, DoneGood, DoneSteady, DoneBehind,
+
+    // The end-of-day check-in's reaction to the day's score.
+    ReviewPending, ReviewGreat, ReviewGood, ReviewOkay, ReviewTough, ReviewEmpty,
+}
 
 /**
  * Everything the buddy can say, as templates.
@@ -14,7 +19,7 @@ enum class Bubble { Night, SleepBlock, EmptyDay, RunningGood, RunningSteady, Run
  * Placeholders: `{name}` the buddy's name, `{title}` a block's title (quoted), `{emoji}` its
  * category's emoji, `{time}` a clock reading, `{length}` how long a block lasts, said aloud,
  * `{left}` the time left in it, `{streak}` and `{streakNext}` days on plan, `{next}` and
- * `{nextTime}` the next block and when it starts.
+ * `{nextTime}` the next block and when it starts, `{score}` a day's adherence.
  *
  * The tone changes the pool, not just a word or two: Gentle never raises its voice, Pushy never
  * lowers it, and both stay kind — disappointment is allowed to be playful, never a guilt trip.
@@ -232,6 +237,32 @@ class MessagePools(
                 Bubble.DoneBehind to listOf(
                     "Tough day? Tomorrow's a new page. Check in and let it go.",
                     "Not every day goes to plan. Let's look back, then rest.",
+                ),
+                Bubble.ReviewPending to listOf(
+                    "One tap per block: done, partly or skipped?",
+                    "Tell me how each block went. I'll do the maths 📝",
+                ),
+                Bubble.ReviewGreat to listOf(
+                    "{score}%! That's a day to be proud of 🌟",
+                    "Look at that: {score}% on plan. Take a bow.",
+                    "{score}%! I'm doing a happy dance over here.",
+                ),
+                Bubble.ReviewGood to listOf(
+                    "{score}% on plan. A solid day!",
+                    "Nice work, {score}%. Tomorrow we go again.",
+                    "{score}%. More than good enough to feel good about.",
+                ),
+                Bubble.ReviewOkay to listOf(
+                    "{score}% today. Every block you did counts.",
+                    "Half the plan is still half a day well spent. {score}%.",
+                ),
+                Bubble.ReviewTough to listOf(
+                    "{score}%, a rough one. Rest up, we'll go again tomorrow 💛",
+                    "Not your day, and that's okay. Tomorrow's a new page.",
+                ),
+                Bubble.ReviewEmpty to listOf(
+                    "Nothing was planned today. Want to plan tomorrow?",
+                    "A day off the plan. Tomorrow's another chance.",
                 ),
             ),
         )
