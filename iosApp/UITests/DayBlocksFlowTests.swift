@@ -44,6 +44,21 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1 block"].exists, "the template does not carry today's block")
     }
 
+    func testTheBuddyGreetsOnTodayAndAnswersToANewName() {
+        let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
+        XCTAssertTrue(kubi.waitForExistence(timeout: 20), "the buddy is not on Today")
+        kubi.tap()
+
+        let name = app.textViews["Name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5), "tapping the buddy did not offer a rename")
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
+        app.buttons["Save"].tap()
+
+        let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
+        XCTAssertTrue(bloop.waitForExistence(timeout: 10), "the buddy did not take its new name")
+    }
+
     func testTurningOnRemindersAsksIOSAndClearsTheNotice() {
         XCTAssertTrue(app.staticTexts["NOW"].waitForExistence(timeout: 20))
         let notice = app.staticTexts.matching(NSPredicate(format: "label CONTAINS \"can't reach you\"")).firstMatch
