@@ -21,6 +21,8 @@ import io.github.meko123456.dayblocks.composeapp.navigation.StatsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TemplatesRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TodayRoute
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderNotice
+import io.github.meko123456.dayblocks.composeapp.reminders.ReminderRescheduler
+import io.github.meko123456.dayblocks.composeapp.reminders.rememberReminderAccess
 import io.github.meko123456.dayblocks.composeapp.settings.rememberBackupFiles
 import io.github.meko123456.dayblocks.core.common.TimeProvider
 import io.github.meko123456.dayblocks.core.designsystem.DayBlocksTheme
@@ -67,7 +69,14 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             if (link != null) AppLinks.consumed()
         }
         NavHost(navController = navController, startDestination = TodayRoute) {
-            composable<OnboardingRoute> { OnboardingScreen() }
+            composable<OnboardingRoute> {
+                val rescheduler = koinInject<ReminderRescheduler>()
+                val access = rememberReminderAccess(onGranted = { scope.launch { rescheduler.rescheduleNow() } })
+                OnboardingScreen(
+                    onRequestReminders = access::requestNotifications,
+                    onFinished = { navController.navigate(TodayRoute) { popUpTo<OnboardingRoute> { inclusive = true } } },
+                )
+            }
             composable<TodayRoute> {
                 TodayScreen(
                     onOpenEditor = { date, blockId, prefill -> navController.navigate(EditBlockRoute.of(date, blockId, prefill)) },
