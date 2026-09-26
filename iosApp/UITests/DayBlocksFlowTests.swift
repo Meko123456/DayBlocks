@@ -13,6 +13,9 @@ final class DayBlocksFlowTests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchEnvironment["DAYBLOCKS_UITEST"] = "1" // in-memory database: every run starts empty
+        // A launch argument is a user default for this run only: these tests start on Today, and
+        // OnboardingTests is the one that starts where a new user does.
+        app.launchArguments += ["-app.onboarded", "YES"]
         app.launch()
     }
 
@@ -71,6 +74,21 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(done.waitForExistence(timeout: 30))
         done.tap()
         XCTAssertTrue(app.staticTexts["100%"].waitForExistence(timeout: 30), "rating the only block did not score the day")
+    }
+
+    func testASettingChangedReachesTodayAtOnce() {
+        let settings = app.buttons["Settings"]
+        XCTAssertTrue(settings.waitForExistence(timeout: 30))
+        settings.tap()
+        XCTAssertTrue(app.staticTexts["Your buddy"].waitForExistence(timeout: 30), "Settings never opened")
+        let name = app.textViews["Name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30))
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
+        app.buttons["‹ Back"].tap()
+
+        let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
+        XCTAssertTrue(bloop.waitForExistence(timeout: 30), "Today still shows the old name")
     }
 
     func testTurningOnRemindersAsksIOSAndClearsTheNotice() {

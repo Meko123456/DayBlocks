@@ -24,6 +24,7 @@ final class ReminderDeliveryTests: XCTestCase {
     func testACheckInIsAnsweredFromTheNotificationAndTheFollowUpComes() {
         let app = XCUIApplication()
         app.launchEnvironment["DAYBLOCKS_UITEST"] = "1"
+        app.launchArguments += ["-app.onboarded", "YES"]
         app.launch()
         XCTAssertTrue(app.staticTexts["NOW"].waitForExistence(timeout: 20))
         allowNotificationsIfAsked(in: app)
