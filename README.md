@@ -26,7 +26,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 6 | Notifications with action buttons, both platforms | ✅ |
 | 7 | Buddy engine and buddy UI | ✅ |
 | 8 | End-of-day check-in and stats | ✅ |
-| 9 | Widgets: Android Glance, iOS WidgetKit | — |
+| 9 | Widgets: Android Glance, iOS WidgetKit | ✅ |
 | 10 | Onboarding and settings | — |
 
 ## Architecture
@@ -195,6 +195,30 @@ Skipped. It opens from Today, or straight from the review notification.
 day for the last seven days. A day with nothing planned or nothing rated gets a flat stub, not a
 bar at zero.
 
+## Widgets
+
+A small and a medium widget on both platforms. Small shows the block that is on, until when,
+and Kubi's face in its current mood. Medium adds what is next and how far through the day's plan
+you are. Tapping either opens the app on Today.
+
+Both are fed by one pure `WidgetTimeline` in `:core:buddy`. It holds an entry for now and one for
+every moment the picture changes: a block starting or ending, quiet hours beginning or ending.
+The entries run up to the 04:00 rollover. `WidgetUpdater` rebuilds it on every change to the plan,
+the outcomes or the buddy's settings.
+
+- **Android (Glance).** The widget draws in the app's process, so it reads the plan directly. After
+  each change, and at each block boundary, it is redrawn. The boundary alarm doesn't wake the
+  phone: a widget on a dark screen is seen by nobody. Its one image is Kubi, rendered by the
+  app's own drawing code into a small bitmap, well inside the RemoteViews memory cap.
+- **iOS (WidgetKit).** The extension is a separate process that never opens the database. The
+  app writes the timeline as `widget.json` into the App Group `group.io.github.meko123456.dayblocks`,
+  with Kubi's six faces as PNGs from the same drawing code. The extension shows them as a
+  timeline, one entry per boundary, and the countdown ticks on its own between entries.
+
+On a physical iPhone the App Group needs your own team's signing. Choose it under *Signing &
+Capabilities* for both the app and the `DayBlocksWidget` target. The committed configuration
+signs ad hoc, which only the simulator accepts.
+
 ## Running it
 
 You need JDK 17 or newer (Android Studio's bundled JBR works), and for iOS, Xcode plus
@@ -236,7 +260,8 @@ xcodebuild -project iosApp.xcodeproj -scheme iosApp \
 ### iOS physical device
 
 Open the generated project, select the `iosApp` target, and under *Signing & Capabilities* choose
-your own team — the committed configuration signs ad hoc, which only the simulator accepts. Then
+your own team — the committed configuration signs ad hoc, which only the simulator accepts. Do the
+same for `DayBlocksWidget`, since the App Group the two share has to be registered to your team. Then
 select your iPhone as the run destination. The bundle identifier may need changing to something
 unique to your team.
 
