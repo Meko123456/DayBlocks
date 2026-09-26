@@ -62,7 +62,7 @@ struct DayBlocksApp: App {
 
     /// Asks iOS for a chance to roll the window forward while the app is closed. iOS decides when,
     /// and may decide never; opening the app always reschedules.
-    private static func requestRefresh() {
+    nonisolated private static func requestRefresh() {
         let request = BGAppRefreshTaskRequest(identifier: refreshTask)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 6 * 60 * 60)
         try? BGTaskScheduler.shared.submit(request)
