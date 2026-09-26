@@ -68,7 +68,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             composable<CheckInRoute> { entry ->
                 CheckinScreen(args = entry.toRoute<CheckInRoute>().toArgs(), onClose = { navController.popBackStack() })
             }
-            composable<StatsRoute> { StatsScreen() }
+            composable<StatsRoute> { StatsScreen(onClose = { navController.popBackStack() }) }
             composable<SettingsRoute> { SettingsScreen() }
         }
     }
