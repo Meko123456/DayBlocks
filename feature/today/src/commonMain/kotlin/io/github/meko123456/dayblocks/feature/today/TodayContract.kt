@@ -2,6 +2,8 @@ package io.github.meko123456.dayblocks.feature.today
 
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
+import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
+import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import kotlinx.datetime.LocalDate
@@ -21,12 +23,22 @@ data class TodayState(
     /** Blocks and free-time gaps together, in start order — exactly what the timeline lays out. */
     val timeline: List<TimelineItem> = emptyList(),
     val now: NowCard = NowCard(),
+    val buddy: BuddyState = BuddyState(),
+    /** The name being typed while the rename dialog is open; null when it is closed. */
+    val renaming: String? = null,
 ) {
     companion object {
         /** 06:00 to midnight, widened as needed so no block and not the current time falls off. */
         val DEFAULT_WINDOW: DaySpan = DaySpan(6 * 60, 24 * 60)
     }
 }
+
+/** The buddy at the top of the screen: who it is, how it looks, and what it is saying. */
+data class BuddyState(
+    val name: String = BuddySettings.DEFAULT_NAME,
+    val mood: BuddyMood = BuddyMood.Happy,
+    val line: String = "",
+)
 
 sealed interface TimelineItem {
     val span: DaySpan
@@ -60,6 +72,11 @@ sealed interface TodayIntent {
     data object TemplatesTapped : TodayIntent
     data object StatsTapped : TodayIntent
     data object SettingsTapped : TodayIntent
+    /** Tapping the buddy's face: the way to rename it. */
+    data object BuddyTapped : TodayIntent
+    data class RenameChanged(val text: String) : TodayIntent
+    data object RenameConfirmed : TodayIntent
+    data object RenameDismissed : TodayIntent
 }
 
 /**

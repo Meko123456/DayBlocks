@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,28 +29,37 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.meko123456.dayblocks.core.designsystem.defaultColor
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
+import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
+import io.github.meko123456.dayblocks.core.designsystem.defaultColor
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
@@ -87,6 +97,7 @@ fun TodayScreen(
     }
 
     TodayContent(state = state, onIntent = viewModel::onIntent, notice = notice)
+    RenameDialog(state, viewModel::onIntent)
 }
 
 @Composable
@@ -125,6 +136,12 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit, no
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Header(state, onIntent)
+            BuddySays(
+                name = state.buddy.name,
+                mood = state.buddy.mood,
+                line = state.buddy.line,
+                onFaceTapped = { onIntent(TodayIntent.BuddyTapped) },
+            )
             // A slot the app shell fills — today, the "reminders are off" strip — so this screen
             // shows it without knowing anything about notifications.
             notice()
@@ -136,6 +153,36 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit, no
             }
         }
     }
+}
+
+@Composable
+private fun RenameDialog(state: TodayState, onIntent: (TodayIntent) -> Unit) {
+    val draft = state.renaming ?: return
+    // Opens focused with the old name selected, so typing a new one replaces it. The selection is
+    // this dialog's business; the ViewModel only ever sees the text.
+    var field by remember { mutableStateOf(TextFieldValue(draft, selection = TextRange(0, draft.length))) }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    AlertDialog(
+        onDismissRequest = { onIntent(TodayIntent.RenameDismissed) },
+        title = { Text("Rename ${state.buddy.name}") },
+        text = {
+            OutlinedTextField(
+                value = field,
+                onValueChange = {
+                    field = it
+                    onIntent(TodayIntent.RenameChanged(it.text))
+                },
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.focusRequester(focus),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onIntent(TodayIntent.RenameConfirmed) }, enabled = draft.isNotBlank()) { Text("Save") }
+        },
+        dismissButton = { TextButton(onClick = { onIntent(TodayIntent.RenameDismissed) }) { Text("Cancel") } },
+    )
 }
 
 @Composable

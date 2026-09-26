@@ -1,21 +1,30 @@
 package io.github.meko123456.dayblocks.feature.today
 
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.dayblocks.core.buddy.TodayBuddy
+import io.github.meko123456.dayblocks.core.buddy.TodaySnapshot
+import io.github.meko123456.dayblocks.core.common.ClockStyle
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.formatClock
+import io.github.meko123456.dayblocks.core.common.formatDuration
 import io.github.meko123456.dayblocks.core.common.minuteTicks
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
+import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
 import io.github.meko123456.dayblocks.core.domain.model.MINUTES_PER_DAY
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
 import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.OutcomeRepository
+import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.time.endInstant
+import io.github.meko123456.dayblocks.core.domain.time.startInstant
 import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
 import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
 import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
+import io.github.meko123456.dayblocks.core.domain.usecase.ScoreAdherence
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -27,8 +36,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.datetime.DateTimeUnit
@@ -54,6 +63,10 @@ class TodayViewModel(
     private val resolveNow: ResolveNow,
     private val findFreeTime: FindFreeTime,
     private val autoFill: AutoFillDay,
+    private val settings: SettingsRepository,
+    private val todayBuddy: TodayBuddy,
+    private val score: ScoreAdherence,
+    private val clockStyle: ClockStyle,
     scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
 ) : MviViewModel<TodayState, TodayIntent, TodayEffect>(TodayState(), scope) {
 
@@ -78,11 +91,24 @@ class TodayViewModel(
                 }
             }
         launchInScope {
-            combine(ticks, days) { now, day -> render(now, day) }.collect { next -> reduce { next } }
+            combine(ticks, days, settings.observeBuddy()) { now, day, buddy -> render(now, day, buddy) }
+                // The rename draft is the user's, not the clock's: a redraw must not close the dialog.
+                .collect { next -> reduce { next.copy(renaming = renaming) } }
         }
     }
 
     override suspend fun handle(intent: TodayIntent) {
+        when (intent) {
+            TodayIntent.BuddyTapped -> return reduce { copy(renaming = buddy.name) }
+            is TodayIntent.RenameChanged -> return reduce { copy(renaming = intent.text.take(BuddySettings.MAX_NAME_LENGTH)) }
+            TodayIntent.RenameDismissed -> return reduce { copy(renaming = null) }
+            TodayIntent.RenameConfirmed -> {
+                val name = state.value.renaming?.trim().orEmpty()
+                if (name.isNotEmpty()) settings.updateBuddy { it.copy(name = name) }
+                return reduce { copy(renaming = null) }
+            }
+            else -> Unit
+        }
         val date = state.value.planDate ?: return
         when (intent) {
             is TodayIntent.BlockTapped -> emit(TodayEffect.OpenEditor(date, blockId = intent.id))
@@ -92,10 +118,11 @@ class TodayViewModel(
             TodayIntent.TemplatesTapped -> emit(TodayEffect.OpenTemplates)
             TodayIntent.StatsTapped -> emit(TodayEffect.OpenStats)
             TodayIntent.SettingsTapped -> emit(TodayEffect.OpenSettings)
+            TodayIntent.BuddyTapped, is TodayIntent.RenameChanged, TodayIntent.RenameConfirmed, TodayIntent.RenameDismissed -> Unit
         }
     }
 
-    private fun render(now: Instant, day: Day): TodayState {
+    private fun render(now: Instant, day: Day, buddy: BuddySettings): TodayState {
         val zone = clock.zone()
         val resolved = resolveNow(day.yesterday + day.today, now, zone)
         val nowMinute = minuteOfPlanDay(now, day.date)
@@ -120,8 +147,30 @@ class TodayViewModel(
             emptyList()
         }
 
+        // Adherence so far: only blocks with an outcome count, so a morning with nothing scored is a
+        // fresh start rather than a failing grade.
+        val scored = day.records.mapNotNull { (id, record) -> record.effectiveOutcome?.let { id to it } }.toMap()
+        val local = now.toLocalDateTime(zone)
+        val outlook = todayBuddy.outlook(
+            TodaySnapshot(
+                date = day.date,
+                time = local.time,
+                plannedBlocks = day.today.size,
+                adherence = score(day.today, scored),
+                current = resolved.current,
+                left = resolved.timeLeft?.ceilMinutes()?.let(::formatDuration),
+                next = resolved.next,
+                nextClock = resolved.next?.let { next ->
+                    val starts = next.startInstant(zone).toLocalDateTime(zone)
+                    formatClock(starts.hour * 60 + starts.minute, clockStyle.is24Hour())
+                },
+            ),
+            buddy,
+        )
+
         return TodayState(
             loading = false,
+            buddy = BuddyState(name = buddy.name, mood = outlook.mood, line = outlook.line),
             planDate = day.date,
             window = window,
             nowMinute = nowMinute.takeIf { it in window },

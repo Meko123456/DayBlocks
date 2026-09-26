@@ -2,26 +2,31 @@ package io.github.meko123456.dayblocks.feature.today
 
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
+import io.github.meko123456.dayblocks.core.buddy.BuddyVoice
+import io.github.meko123456.dayblocks.core.buddy.MessagePools
+import io.github.meko123456.dayblocks.core.buddy.TodayBuddy
 import io.github.meko123456.dayblocks.core.common.OffsetTimeProvider
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.BlockOutcome
 import io.github.meko123456.dayblocks.core.domain.model.BlockRecord
+import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
 import io.github.meko123456.dayblocks.core.domain.model.Category
 import io.github.meko123456.dayblocks.core.domain.model.CheckInAnswer
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
-import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
-import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
-import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
-import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
-import io.github.meko123456.dayblocks.core.testing.FakeBlockRepository
-import io.github.meko123456.dayblocks.core.testing.FakeOutcomeRepository
-import io.github.meko123456.dayblocks.core.testing.FakeTemplateRepository
-import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
-import io.github.meko123456.dayblocks.core.domain.usecase.GenerateDayFromTemplate
 import io.github.meko123456.dayblocks.core.domain.model.Template
 import io.github.meko123456.dayblocks.core.domain.model.TemplateBlock
 import io.github.meko123456.dayblocks.core.domain.model.TemplateId
-import kotlinx.datetime.DayOfWeek
+import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
+import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
+import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
+import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
+import io.github.meko123456.dayblocks.core.domain.usecase.GenerateDayFromTemplate
+import io.github.meko123456.dayblocks.core.domain.usecase.ResolveNow
+import io.github.meko123456.dayblocks.core.domain.usecase.ScoreAdherence
+import io.github.meko123456.dayblocks.core.testing.FakeBlockRepository
+import io.github.meko123456.dayblocks.core.testing.FakeOutcomeRepository
+import io.github.meko123456.dayblocks.core.testing.FakeSettingsRepository
+import io.github.meko123456.dayblocks.core.testing.FakeTemplateRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -33,6 +38,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
@@ -54,12 +60,23 @@ class TodayViewModelTest {
     private val repo = FakeBlockRepository(listOf(work, rest, read, sleep))
     private val outcomes = FakeOutcomeRepository(repo)
     private val templates = FakeTemplateRepository()
+    private val settings = FakeSettingsRepository()
 
     /** A ViewModel whose clock starts at [start] and moves only when the test advances virtual time. */
     private fun TestScope.todayAt(start: LocalDateTime): TodayViewModel {
         val clock = OffsetTimeProvider(start.toInstant(zone), zone) { testScheduler.currentTime }
         val autoFill = AutoFillDay(repo, templates, GenerateDayFromTemplate { "filled-${repo.all.value.size}" }, clock)
-        return TodayViewModel(repo, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), autoFill, backgroundScope)
+        val buddy = TodayBuddy(BuddyVoice(MessagePools.Default.firstLinesOnly()))
+        return TodayViewModel(
+            repo, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), autoFill,
+            settings, buddy, ScoreAdherence(), { true }, backgroundScope,
+        )
+    }
+
+    private suspend fun ReceiveTurbine<TodayState>.expectMostRecentItemAfter(until: (TodayState) -> Boolean): TodayState {
+        var state = awaitItem()
+        while (!until(state)) state = awaitItem()
+        return state
     }
 
     private suspend fun ReceiveTurbine<TodayState>.awaitLoaded(): TodayState {
@@ -257,6 +274,82 @@ class TodayViewModelTest {
             var state = awaitLoaded()
             while (state.now.current == null) state = awaitItem()
             assertEquals("Deep work", state.now.current?.title)
+        }
+    }
+
+    @Test
+    fun theBuddySaysWhatIsOnAndIsHappyBeforeAnythingIsScored() = runTest {
+        todayAt(LocalDateTime(2026, 9, 21, 10, 30)).state.test {
+            val buddy = awaitLoaded().buddy
+            assertEquals("Kubi", buddy.name)
+            assertEquals(BuddyMood.Happy, buddy.mood)
+            assertEquals("“work” now, 1h 30m to go. You're on a roll!", buddy.line)
+        }
+    }
+
+    @Test
+    fun theBuddysFaceFollowsTheAnswersGivenToday() = runTest {
+        outcomes.recordAnswer(work.id, CheckInAnswer.SkipBlock, Instant.parse("2026-09-21T06:00:00Z"))
+        todayAt(LocalDateTime(2026, 9, 21, 12, 30)).state.test {
+            assertEquals(BuddyMood.Disappointed, awaitLoaded().buddy.mood, "the only block scored so far was skipped")
+            outcomes.recordOutcome(rest.id, BlockOutcome.Done, Instant.parse("2026-09-21T08:40:00Z"))
+            outcomes.recordOutcome(work.id, BlockOutcome.Done, Instant.parse("2026-09-21T08:41:00Z"))
+            var state = awaitItem()
+            while (state.buddy.mood != BuddyMood.Proud) state = awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun aBlankEveningBetweenBlocksPointsAtWhatIsNext() = runTest {
+        repo.all.value = listOf(block("gym", monday, at(18), at(19), Category.Exercise))
+        todayAt(LocalDateTime(2026, 9, 21, 16, 0)).state.test {
+            assertEquals("Free until 18:00. Want to fill it?", awaitLoaded().buddy.line)
+        }
+    }
+
+    @Test
+    fun renamingTheBuddyStoresTheNameAndClosesTheDialog() = runTest {
+        val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 30))
+        vm.state.test {
+            awaitLoaded()
+            vm.onIntent(TodayIntent.BuddyTapped)
+            assertEquals("Kubi", expectMostRecentItemAfter { it.renaming != null }.renaming)
+            vm.onIntent(TodayIntent.RenameChanged("Bloop"))
+            vm.onIntent(TodayIntent.RenameConfirmed)
+            val renamed = expectMostRecentItemAfter { it.renaming == null && it.buddy.name == "Bloop" }
+            assertEquals("Bloop", renamed.buddy.name)
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals("Bloop", settings.buddy.value.name)
+    }
+
+    @Test
+    fun aBlankNameIsNeverSaved() = runTest {
+        val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 30))
+        vm.state.test {
+            awaitLoaded()
+            vm.onIntent(TodayIntent.BuddyTapped)
+            vm.onIntent(TodayIntent.RenameChanged("   "))
+            vm.onIntent(TodayIntent.RenameConfirmed)
+            expectMostRecentItemAfter { it.renaming == null }
+            cancelAndIgnoreRemainingEvents()
+        }
+        assertEquals("Kubi", settings.buddy.value.name)
+    }
+
+    @Test
+    fun theRenameDialogSurvivesTheClockTicking() = runTest {
+        val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 30))
+        vm.state.test {
+            awaitLoaded()
+            vm.onIntent(TodayIntent.BuddyTapped)
+            vm.onIntent(TodayIntent.RenameChanged("Blo"))
+            expectMostRecentItemAfter { it.renaming == "Blo" }
+            testScheduler.advanceTimeBy(3 * 60_000L)
+            testScheduler.runCurrent()
+            assertEquals("Blo", expectMostRecentItem().renaming)
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
