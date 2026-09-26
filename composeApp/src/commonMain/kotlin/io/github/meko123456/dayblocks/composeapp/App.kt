@@ -1,11 +1,19 @@
 package io.github.meko123456.dayblocks.composeapp
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,12 +28,15 @@ import io.github.meko123456.dayblocks.composeapp.navigation.SettingsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.StatsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TemplatesRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TodayRoute
+import io.github.meko123456.dayblocks.composeapp.navigation.startDestination
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderNotice
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderRescheduler
 import io.github.meko123456.dayblocks.composeapp.reminders.rememberReminderAccess
 import io.github.meko123456.dayblocks.composeapp.settings.rememberBackupFiles
 import io.github.meko123456.dayblocks.core.common.TimeProvider
 import io.github.meko123456.dayblocks.core.designsystem.DayBlocksTheme
+import io.github.meko123456.dayblocks.core.domain.model.ThemeMode
+import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import io.github.meko123456.dayblocks.feature.checkin.CheckinScreen
 import io.github.meko123456.dayblocks.feature.editblock.EditBlockScreen
@@ -41,20 +52,37 @@ import org.koin.compose.koinInject
  * The shared root. Both platforms call this: :androidApp from an Activity, iosApp from a
  * UIViewController, so there is exactly one navigation graph and one theme for the whole app.
  *
- * The start destination is Today while the has-onboarded check waits for :feature:onboarding
- * (step 10).
+ * It starts on onboarding for someone new and on Today for everyone else, in the theme and
+ * category colours chosen in Settings.
  */
 @Composable
-fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
-    DayBlocksTheme(darkTheme = darkTheme) {
+fun App() {
+    val settings = koinInject<SettingsRepository>()
+    val blocks = koinInject<BlockRepository>()
+    val app by remember(settings) { settings.observeApp() }.collectAsState(initial = null)
+    val start by produceState<Any?>(null) { value = startDestination(settings, blocks) }
+    val dark = when (app?.theme ?: ThemeMode.System) {
+        ThemeMode.System -> isSystemInDarkTheme()
+        ThemeMode.Light -> false
+        ThemeMode.Dark -> true
+    }
+    val categoryColors = remember(app?.categoryColors) { app?.categoryColors.orEmpty().mapValues { (_, argb) -> Color(argb) } }
+
+    DayBlocksTheme(darkTheme = dark, categoryColors = categoryColors) {
         // Every return to the app is an opening: comebacks count from the last one, and the
         // rescheduler moves them along as soon as it is written.
-        val settings = koinInject<SettingsRepository>()
         val clock = koinInject<TimeProvider>()
         val scope = rememberCoroutineScope()
         LifecycleResumeEffect(settings) {
             scope.launch { settings.markOpened(clock.now()) }
             onPauseOrDispose { }
+        }
+        // Until it is known whether this is someone new, only the background: no flash of Today
+        // before onboarding, and no flash of onboarding before Today.
+        val destination = start
+        if (destination == null) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+            return@DayBlocksTheme
         }
         val navController = rememberNavController()
         // A tapped review notification opens that day's check-in, and a tapped widget opens Today,
@@ -68,7 +96,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             }
             if (link != null) AppLinks.consumed()
         }
-        NavHost(navController = navController, startDestination = TodayRoute) {
+        NavHost(navController = navController, startDestination = destination) {
             composable<OnboardingRoute> {
                 val rescheduler = koinInject<ReminderRescheduler>()
                 val access = rememberReminderAccess(onGranted = { scope.launch { rescheduler.rescheduleNow() } })
