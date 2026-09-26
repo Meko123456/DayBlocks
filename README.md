@@ -25,7 +25,7 @@ the next begins. See the [issues](https://github.com/Meko123456/DayBlocks/issues
 | 5 | Templates and weekday assignment | ✅ |
 | 6 | Notifications with action buttons, both platforms | ✅ |
 | 7 | Buddy engine and buddy UI | ✅ |
-| 8 | End-of-day check-in and stats | — |
+| 8 | End-of-day check-in and stats | ✅ |
 | 9 | Widgets: Android Glance, iOS WidgetKit | — |
 | 10 | Onboarding and settings | — |
 
@@ -177,6 +177,24 @@ The engine in `:core:buddy` is pure Kotlin and decides everything the buddy says
 The settings — name, tone, quiet hours and cap — live in multiplatform-settings (SharedPreferences
 on Android, NSUserDefaults on iOS). Changing one reschedules everything straight away.
 
+## Check-in and stats
+
+**The end-of-day check-in** lists the day's blocks, each with one tap for Done, Partly or
+Skipped. It opens from Today, or straight from the review notification.
+- **Prefilled.** A block answered from a notification during the day shows what that answer
+  suggests: "On it" as Done, "Got distracted" as Partly, "Skip this block" as Skipped. **Looks
+  right** confirms every suggestion at once.
+- **Recorded as you tap.** There is no Save button to forget. Once every block has an outcome,
+  the review notification stops.
+- **Score.** The day's adherence is weighted by planned time, so skipping three hours of work
+  counts for more than skipping a short break.
+- **The buddy reacts** warmly at every level: proud of a great day, comforting after a rough one,
+  never telling off.
+
+**Stats** keeps it minimal: the streak (days in a row at 70% of the plan or more), and a bar per
+day for the last seven days. A day with nothing planned or nothing rated gets a flat stub, not a
+bar at zero.
+
 ## Running it
 
 You need JDK 17 or newer (Android Studio's bundled JBR works), and for iOS, Xcode plus
@@ -233,7 +251,8 @@ The data layer's tests run against a real SQLite on both: sqlite-jdbc on the JVM
 system SQLite through the app's own driver, in memory.
 
 The iOS app also has XCUITests that drive the shared UI end to end: add a block and find it on
-Today, save the day as a template and find it listed, and turn on notifications from Today. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
+Today, save the day as a template and find it listed, turn on notifications from Today, rename
+the buddy, and rate a block at the check-in. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
 run starts from an empty plan:
 
 ```sh
