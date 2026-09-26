@@ -21,6 +21,7 @@ import io.github.meko123456.dayblocks.composeapp.navigation.StatsRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TemplatesRoute
 import io.github.meko123456.dayblocks.composeapp.navigation.TodayRoute
 import io.github.meko123456.dayblocks.composeapp.reminders.ReminderNotice
+import io.github.meko123456.dayblocks.composeapp.settings.rememberBackupFiles
 import io.github.meko123456.dayblocks.core.common.TimeProvider
 import io.github.meko123456.dayblocks.core.designsystem.DayBlocksTheme
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
@@ -85,7 +86,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 CheckinScreen(args = entry.toRoute<CheckInRoute>().toArgs(), onClose = { navController.popBackStack() })
             }
             composable<StatsRoute> { StatsScreen(onClose = { navController.popBackStack() }) }
-            composable<SettingsRoute> { SettingsScreen() }
+            composable<SettingsRoute> { SettingsScreen(onClose = { navController.popBackStack() }, files = rememberBackupFiles()) }
         }
     }
 }
