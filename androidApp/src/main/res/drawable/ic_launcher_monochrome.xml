@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kubi for themed icons (Android 13 and later): one flat silhouette the launcher tints, with the
+     eyes and the smile cut out so the face survives the tint. Same geometry as the foreground. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,32.4 Q61.2,24.6 67.2,28.8 Q61.2,34.2 54,32.4 Z M52.95,39 L52.95,31.8 L55.05,31.8 L55.05,39 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M45.6,38.4 L62.4,38.4 A14.4,14.4 0 0,1 76.8,52.8 L76.8,64.8 A14.4,14.4 0 0,1 62.4,79.2 L45.6,79.2 A14.4,14.4 0 0,1 31.2,64.8 L31.2,52.8 A14.4,14.4 0 0,1 45.6,38.4 Z M43.5,55.2 A3.3,3.3 0 1,0 50.1,55.2 A3.3,3.3 0 1,0 43.5,55.2 Z M57.9,55.2 A3.3,3.3 0 1,0 64.5,55.2 A3.3,3.3 0 1,0 57.9,55.2 Z M48.6,63.8 A5.4,4.3 0 0,0 59.4,63.8 A5.4,2.1 0 0,1 48.6,63.8 Z" />
+</vector>
