@@ -13,22 +13,55 @@ private val Sunrise = Color(0xFFF2994A)
 private val Ink = Color(0xFF1B1D22)
 private val Paper = Color(0xFFFAF7F2)
 
+/*
+ * Every role a Material component reads by default is named here, not only the six the screens
+ * ask for by name. The rest used to fall through to Material's baseline, which is lavender: the
+ * first screenshot tests drew Today's "Add block" button (primaryContainer) and the template cards
+ * (surfaceContainerHighest) in it. The containers are Sunrise and Paper mixed, the surfaces warm
+ * steps up from Paper, and every text colour on them reads at 7:1 or better in both themes.
+ */
 private val LightScheme = lightColorScheme(
     primary = Sunrise,
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFFBE0C9),
+    onPrimaryContainer = Color(0xFF523419),
+    secondaryContainer = Color(0xFFF9E8D7),
+    onSecondaryContainer = Color(0xFF3A2A1C),
     background = Paper,
     onBackground = Ink,
     surface = Color.White,
     onSurface = Ink,
+    surfaceVariant = Color(0xFFF9ECDE),
+    onSurfaceVariant = Color(0xFF51463C),
+    surfaceContainerLowest = Color.White,
+    surfaceContainerLow = Color(0xFFFAF4ED),
+    surfaceContainer = Color(0xFFFAF1E8),
+    surfaceContainerHigh = Color(0xFFF9EFE3),
+    surfaceContainerHighest = Color(0xFFF9ECDE),
+    outline = Color(0xFF85776A),
+    outlineVariant = Color(0xFFD8CCBE),
 )
 
 private val DarkScheme = darkColorScheme(
     primary = Sunrise,
     onPrimary = Ink,
+    primaryContainer = Color(0xFF66401F),
+    onPrimaryContainer = Color(0xFFFBE2CC),
+    secondaryContainer = Color(0xFF46362A),
+    onSecondaryContainer = Color(0xFFF6E6D6),
     background = Ink,
     onBackground = Paper,
     surface = Color(0xFF24262C),
     onSurface = Paper,
+    surfaceVariant = Color(0xFF3A3637),
+    onSurfaceVariant = Color(0xFFD9CDBF),
+    surfaceContainerLowest = Color(0xFF15171B),
+    surfaceContainerLow = Color(0xFF1F2126),
+    surfaceContainer = Color(0xFF24262C),
+    surfaceContainerHigh = Color(0xFF2C2B2D),
+    surfaceContainerHighest = Color(0xFF383537),
+    outline = Color(0xFFA08F7E),
+    outlineVariant = Color(0xFF4E4439),
 )
 
 /**
