@@ -39,7 +39,9 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 // commonTest also runs on the JVM as testAndroidHostTest: the fast loop, seconds
                 // rather than the minute a simulator run costs. iosSimulatorArm64Test still runs
                 // the same tests on Native, which is the half that catches platform divergence.
-                withHostTestBuilder {}
+                // Android resources are included so Robolectric can inflate a real activity for
+                // the screenshot tests the feature modules keep there.
+                withHostTestBuilder {}.configure { isIncludeAndroidResources = true }
             }
             iosArm64()
             iosSimulatorArm64()

@@ -301,6 +301,16 @@ unique to your team.
 The data layer's tests run against a real SQLite on both: sqlite-jdbc on the JVM, and on iOS the
 system SQLite through the app's own driver, in memory.
 
+Every screen also has screenshot tests on the JVM: its stateless content, drawn with a fixed day
+in both themes by Robolectric's native graphics, and compared by Roborazzi with the PNG committed
+next to the test (`feature/*/src/androidHostTest/screenshots/`). They are part of
+`testAndroidHostTest`, so CI fails on a screen that no longer looks like its picture. After a
+deliberate change, redraw them and look at the diff before committing it:
+
+```sh
+./gradlew testAndroidHostTest -Proborazzi.record=true
+```
+
 The iOS app also has XCUITests that drive the shared UI end to end: add a block and find it on
 Today, save the day as a template and find it listed, turn on notifications from Today, rename
 the buddy, rate a block at the check-in, change a setting, and walk through onboarding as a new

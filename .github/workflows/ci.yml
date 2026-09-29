@@ -25,6 +25,16 @@ jobs:
       - name: Unit tests, debug build, lint
         run: ./gradlew testAndroidHostTest :androidApp:assembleDebug :androidApp:lintDebug --stacktrace
 
+      # A screenshot test that fails leaves what it drew and the difference next to the committed
+      # PNG; keep them, or the failure says a screen changed without showing how.
+      - name: Upload screenshot differences
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshot-diffs
+          path: feature/*/build/outputs/roborazzi/
+          if-no-files-found: ignore
+
       # Debug never runs R8. Without this, a keep-rules mistake first surfaces when somebody builds
       # a release by hand; lintVitalRelease is the release-blocking lint that lintDebug omits.
       - name: Release build (R8 + release-blocking lint)
