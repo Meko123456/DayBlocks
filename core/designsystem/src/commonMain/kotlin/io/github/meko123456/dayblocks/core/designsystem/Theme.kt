@@ -22,7 +22,8 @@ private val Paper = Color(0xFFFAF7F2)
  */
 private val LightScheme = lightColorScheme(
     primary = Sunrise,
-    onPrimary = Color.White,
+    // Ink, not white: white on Sunrise is 2.2:1, Ink is 7.6:1. The fill stays the brand orange.
+    onPrimary = Ink,
     primaryContainer = Color(0xFFFBE0C9),
     onPrimaryContainer = Color(0xFF523419),
     secondaryContainer = Color(0xFFF9E8D7),
