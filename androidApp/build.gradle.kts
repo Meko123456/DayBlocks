@@ -61,6 +61,11 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.glance.appwidget)
     implementation(libs.glance.material3)
+    // Nothing here schedules work; Glance runs its widget sessions on WorkManager and asks for
+    // 2.7.1, which brings Room 2.2.5. Under R8 full mode that Room's keep rules no longer hold the
+    // constructor it reaches for by reflection, so the minified app died in startup creating
+    // WorkDatabase. The catalog named 2.12.0 already; nothing had asked for it.
+    implementation(libs.work.runtime.ktx)
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
 }
