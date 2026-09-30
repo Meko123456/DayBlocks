@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.map
@@ -69,8 +70,8 @@ fun ReminderNotice(modifier: Modifier = Modifier) {
                 Text(notice.text, style = MaterialTheme.typography.bodySmall)
             }
             Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = notice.onAction) { Text(notice.action) }
-                TextButton(onClick = { dismissed = true }) { Text("Later") }
+                TextButton(onClick = notice.onAction, colors = accentTextButtonColors()) { Text(notice.action) }
+                TextButton(onClick = { dismissed = true }, colors = accentTextButtonColors()) { Text("Later") }
             }
         }
     }
