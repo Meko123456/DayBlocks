@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
+import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
 import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
@@ -176,12 +178,13 @@ private fun RenameDialog(state: TodayState, onIntent: (TodayIntent) -> Unit) {
                 label = { Text("Name") },
                 singleLine = true,
                 modifier = Modifier.focusRequester(focus),
+                colors = accentOutlinedTextFieldColors(),
             )
         },
         confirmButton = {
-            TextButton(onClick = { onIntent(TodayIntent.RenameConfirmed) }, enabled = draft.isNotBlank()) { Text("Save") }
+            TextButton(onClick = { onIntent(TodayIntent.RenameConfirmed) }, enabled = draft.isNotBlank(), colors = accentTextButtonColors()) { Text("Save") }
         },
-        dismissButton = { TextButton(onClick = { onIntent(TodayIntent.RenameDismissed) }) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = { onIntent(TodayIntent.RenameDismissed) }, colors = accentTextButtonColors()) { Text("Cancel") } },
     )
 }
 
@@ -201,10 +204,10 @@ private fun Header(state: TodayState, onIntent: (TodayIntent) -> Unit) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
-            TextButton(onClick = { onIntent(TodayIntent.CheckInTapped) }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Check-in") }
-            TextButton(onClick = { onIntent(TodayIntent.TemplatesTapped) }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Templates") }
-            TextButton(onClick = { onIntent(TodayIntent.StatsTapped) }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Stats") }
-            TextButton(onClick = { onIntent(TodayIntent.SettingsTapped) }, contentPadding = PaddingValues(horizontal = 8.dp)) { Text("Settings") }
+            TextButton(onClick = { onIntent(TodayIntent.CheckInTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Check-in") }
+            TextButton(onClick = { onIntent(TodayIntent.TemplatesTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Templates") }
+            TextButton(onClick = { onIntent(TodayIntent.StatsTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Stats") }
+            TextButton(onClick = { onIntent(TodayIntent.SettingsTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Settings") }
         }
     }
 }

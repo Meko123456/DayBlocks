@@ -33,6 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
+import io.github.meko123456.dayblocks.core.designsystem.LocalAccentText
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
 import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
@@ -66,7 +68,7 @@ internal fun CheckinContent(state: CheckinState, onIntent: (CheckinIntent) -> Un
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onIntent(CheckinIntent.BackTapped) }) { Text("‹ Back") }
+                TextButton(onClick = { onIntent(CheckinIntent.BackTapped) }, colors = accentTextButtonColors()) { Text("‹ Back") }
                 Column {
                     Text(
                         if (state.isToday) "How did today go?" else "How did ${state.date?.dayOfWeek?.name?.lowercase()?.replaceFirstChar { it.uppercase() }} go?",
@@ -91,7 +93,7 @@ internal fun CheckinContent(state: CheckinState, onIntent: (CheckinIntent) -> Un
                         state.score?.let { "$it%" } ?: "—",
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = LocalAccentText.current,
                     )
                     Text(
                         if (state.score == null) "Nothing rated yet" else "of the day's plan followed",

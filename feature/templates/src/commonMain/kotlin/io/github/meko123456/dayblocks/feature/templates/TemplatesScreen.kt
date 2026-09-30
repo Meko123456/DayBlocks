@@ -32,6 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.domain.model.TemplateId
 import kotlinx.datetime.DayOfWeek
 import org.koin.compose.viewmodel.koinViewModel
@@ -59,7 +61,7 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onIntent(TemplatesIntent.BackTapped) }) { Text("‹ Back") }
+                TextButton(onClick = { onIntent(TemplatesIntent.BackTapped) }, colors = accentTextButtonColors()) { Text("‹ Back") }
                 Text("Templates", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
 
@@ -93,7 +95,7 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Row {
-                            TextButton(onClick = { onIntent(TemplatesIntent.ApplyTapped(template.id)) }) { Text("Apply to today") }
+                            TextButton(onClick = { onIntent(TemplatesIntent.ApplyTapped(template.id)) }, colors = accentTextButtonColors()) { Text("Apply to today") }
                             TextButton(onClick = { onIntent(TemplatesIntent.DeleteTapped(template.id)) }) {
                                 Text("Delete", color = MaterialTheme.colorScheme.error)
                             }
@@ -124,12 +126,13 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
                     onValueChange = { onIntent(TemplatesIntent.DraftNameChanged(it)) },
                     label = { Text("Template name") },
                     singleLine = true,
+                    colors = accentOutlinedTextFieldColors(),
                 )
             },
             confirmButton = {
-                TextButton(onClick = { onIntent(TemplatesIntent.NameConfirmed) }, enabled = state.draftName.isNotBlank()) { Text("Save") }
+                TextButton(onClick = { onIntent(TemplatesIntent.NameConfirmed) }, enabled = state.draftName.isNotBlank(), colors = accentTextButtonColors()) { Text("Save") }
             },
-            dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.NameDismissed) }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.NameDismissed) }, colors = accentTextButtonColors()) { Text("Cancel") } },
         )
     }
 
@@ -145,8 +148,8 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
                     },
                 )
             },
-            confirmButton = { TextButton(onClick = { onIntent(TemplatesIntent.ReplaceConfirmed) }) { Text("Replace") } },
-            dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.ReplaceDismissed) }) { Text("Keep today") } },
+            confirmButton = { TextButton(onClick = { onIntent(TemplatesIntent.ReplaceConfirmed) }, colors = accentTextButtonColors()) { Text("Replace") } },
+            dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.ReplaceDismissed) }, colors = accentTextButtonColors()) { Text("Keep today") } },
         )
     }
 }
@@ -159,7 +162,7 @@ private fun WeekdayRow(day: DayOfWeek, state: TemplatesState, onIntent: (Templat
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(day.name.lowercase().replaceFirstChar { it.uppercase() }, Modifier.weight(1f))
         Box {
-            TextButton(onClick = { open = true }) { Text("$label ▾") }
+            TextButton(onClick = { open = true }, colors = accentTextButtonColors()) { Text("$label ▾") }
             DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
                 DropdownMenuItem(text = { Text("Nothing") }, onClick = { open = false; onIntent(TemplatesIntent.AssignPicked(day, null)) })
                 state.templates.forEach { template ->

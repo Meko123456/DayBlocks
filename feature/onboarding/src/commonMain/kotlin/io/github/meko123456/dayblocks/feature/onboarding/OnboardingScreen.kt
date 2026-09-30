@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddyFace
 import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
 import io.github.meko123456.dayblocks.core.domain.model.BuddyTone
@@ -77,7 +79,7 @@ internal fun OnboardingContent(state: OnboardingState, onIntent: (OnboardingInte
                 OnboardingPage.FirstDay -> FirstDay(state, onIntent)
             }
             if (state.page != OnboardingPage.Meet) {
-                TextButton(onClick = { onIntent(OnboardingIntent.BackTapped) }) { Text("‹ Back") }
+                TextButton(onClick = { onIntent(OnboardingIntent.BackTapped) }, colors = accentTextButtonColors()) { Text("‹ Back") }
             }
         }
     }
@@ -99,6 +101,7 @@ private fun Meet(state: OnboardingState, onIntent: (OnboardingIntent) -> Unit) {
         label = { Text("What should I be called?") },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
+        colors = accentOutlinedTextFieldColors(),
     )
     Button(onClick = { onIntent(OnboardingIntent.NextTapped) }, modifier = Modifier.fillMaxWidth()) { Text("Nice to meet you") }
 }

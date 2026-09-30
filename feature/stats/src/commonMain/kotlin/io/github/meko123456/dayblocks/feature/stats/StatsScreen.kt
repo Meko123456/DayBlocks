@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -54,7 +55,7 @@ internal fun StatsContent(state: StatsState, onIntent: (StatsIntent) -> Unit) {
         }
         Column(Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onIntent(StatsIntent.BackTapped) }) { Text("‹ Back") }
+                TextButton(onClick = { onIntent(StatsIntent.BackTapped) }, colors = accentTextButtonColors()) { Text("‹ Back") }
                 Text("Stats", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
 

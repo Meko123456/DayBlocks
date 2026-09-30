@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import io.github.meko123456.dayblocks.core.designsystem.LocalAccentText
 import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
 
 /**
@@ -42,7 +43,7 @@ fun BuddySays(name: String, mood: BuddyMood, line: String, modifier: Modifier = 
             modifier = Modifier.weight(1f),
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Text(name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(name, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = LocalAccentText.current)
                 Text(line, style = MaterialTheme.typography.bodyMedium)
             }
         }

@@ -1,6 +1,10 @@
 package io.github.meko123456.dayblocks.core.designsystem
 
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -13,12 +17,21 @@ private val Sunrise = Color(0xFFF2994A)
 private val Ink = Color(0xFF1B1D22)
 private val Paper = Color(0xFFFAF7F2)
 
+/**
+ * Sunrise, darker, for orange *text* in the light theme. Sunrise itself is 2.1:1 on Paper, under
+ * the 4.5:1 that text needs, so the "Check-in", "Apply to today" and every other orange label
+ * could be seen but not comfortably read. Ember is 5.3:1 or better on every light surface and
+ * container below. Fills keep Sunrise: that is the brand, and a fill is not read.
+ */
+private val Ember = Color(0xFF8F490A)
+
 /*
  * Every role a Material component reads by default is named here, not only the six the screens
  * ask for by name. The rest used to fall through to Material's baseline, which is lavender: the
  * first screenshot tests drew Today's "Add block" button (primaryContainer) and the template cards
  * (surfaceContainerHighest) in it. The containers are Sunrise and Paper mixed, the surfaces warm
- * steps up from Paper, and every text colour on them reads at 7:1 or better in both themes.
+ * steps up from Paper, and the neutral text colours on them read at 7:1 or better in both themes.
+ * Orange text is [LocalAccentText]'s, not primary's.
  */
 private val LightScheme = lightColorScheme(
     primary = Sunrise,
@@ -72,10 +85,30 @@ private val DarkScheme = darkColorScheme(
  */
 @Composable
 fun DayBlocksTheme(darkTheme: Boolean, categoryColors: Map<Category, Color> = emptyMap(), content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalCategoryColors provides categoryColors) {
+    CompositionLocalProvider(
+        LocalCategoryColors provides categoryColors,
+        LocalAccentText provides if (darkTheme) Sunrise else Ember,
+    ) {
         MaterialTheme(colorScheme = if (darkTheme) DarkScheme else LightScheme, content = content)
     }
 }
+
+/**
+ * The orange to write in, where the scheme's primary is the orange to fill with. Material has one
+ * role for both, since a text button's label and a filled button's background are each `primary`,
+ * and Sunrise can only be one of them on a light surface. Dark surfaces keep Sunrise, which reads
+ * at 5.2:1 or better on every one of them.
+ */
+val LocalAccentText = staticCompositionLocalOf { Ember }
+
+/** A text button with its label in [LocalAccentText] rather than primary. */
+@Composable
+fun accentTextButtonColors(): ButtonColors = ButtonDefaults.textButtonColors(contentColor = LocalAccentText.current)
+
+/** An outlined text field whose focused label is [LocalAccentText] rather than primary. */
+@Composable
+fun accentOutlinedTextFieldColors(): TextFieldColors =
+    OutlinedTextFieldDefaults.colors(focusedLabelColor = LocalAccentText.current)
 
 /** The user's colour choices, as [DayBlocksTheme] provides them. */
 val LocalCategoryColors = staticCompositionLocalOf<Map<Category, Color>> { emptyMap() }

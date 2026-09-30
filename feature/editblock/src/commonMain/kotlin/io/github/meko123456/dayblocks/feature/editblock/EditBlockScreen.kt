@@ -39,6 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
+import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
 import io.github.meko123456.dayblocks.core.domain.model.Category
@@ -76,7 +78,7 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
             // and on Android it took a Back press to reach. Top-right is where both platforms put
             // an editor's confirm action for exactly that reason.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onIntent(EditBlockIntent.CancelTapped) }) { Text("Cancel") }
+                TextButton(onClick = { onIntent(EditBlockIntent.CancelTapped) }, colors = accentTextButtonColors()) { Text("Cancel") }
                 Text(
                     if (state.isNew) "New block" else "Edit block",
                     style = MaterialTheme.typography.titleLarge,
@@ -94,6 +96,7 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
                     label = { Text("What are you doing?") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
+                    colors = accentOutlinedTextFieldColors(),
                 )
                 if (state.suggestions.isNotEmpty()) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -159,6 +162,7 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
                 label = { Text("Note (optional)") },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
+                colors = accentOutlinedTextFieldColors(),
             )
 
             // Delete stays at the bottom: destructive, rare, and deliberately not next to Save.

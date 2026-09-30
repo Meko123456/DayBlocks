@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.designsystem.CategoryPalette
+import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
+import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddyFace
 import io.github.meko123456.dayblocks.core.designsystem.color
 import io.github.meko123456.dayblocks.core.designsystem.time.rememberIs24HourFormat
@@ -83,7 +85,7 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onIntent(SettingsIntent.BackTapped) }) { Text("‹ Back") }
+                TextButton(onClick = { onIntent(SettingsIntent.BackTapped) }, colors = accentTextButtonColors()) { Text("‹ Back") }
                 Text("Settings", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
 
@@ -97,6 +99,7 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
                         label = { Text("Name") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
+                        colors = accentOutlinedTextFieldColors(),
                     )
                 }
                 Text("Tone", style = MaterialTheme.typography.labelLarge)
@@ -152,8 +155,8 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
             onDismissRequest = { onIntent(SettingsIntent.ImportDismissed) },
             title = { Text("Replace everything?") },
             text = { Text("Every block, template and check-in on this phone will be replaced by the backup's. This cannot be undone.") },
-            confirmButton = { TextButton(onClick = { onIntent(SettingsIntent.ImportConfirmed) }) { Text("Replace") } },
-            dismissButton = { TextButton(onClick = { onIntent(SettingsIntent.ImportDismissed) }) { Text("Cancel") } },
+            confirmButton = { TextButton(onClick = { onIntent(SettingsIntent.ImportConfirmed) }, colors = accentTextButtonColors()) { Text("Replace") } },
+            dismissButton = { TextButton(onClick = { onIntent(SettingsIntent.ImportDismissed) }, colors = accentTextButtonColors()) { Text("Cancel") } },
         )
     }
 }
@@ -216,7 +219,7 @@ private fun ColorRow(category: Category, custom: Boolean, onIntent: (SettingsInt
                 )
             }
         }
-        if (custom) TextButton(onClick = { onIntent(SettingsIntent.CategoryColorPicked(category, null)) }) { Text("Reset") }
+        if (custom) TextButton(onClick = { onIntent(SettingsIntent.CategoryColorPicked(category, null)) }, colors = accentTextButtonColors()) { Text("Reset") }
     }
 }
 
