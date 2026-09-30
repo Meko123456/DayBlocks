@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
+import io.github.meko123456.dayblocks.core.designsystem.LocalAccentText
 import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
 import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import io.github.meko123456.dayblocks.core.designsystem.buddy.BuddySays
@@ -214,7 +215,10 @@ private fun Header(state: TodayState, onIntent: (TodayIntent) -> Unit) {
 
 @Composable
 private fun NowCardView(now: NowCard, is24Hour: Boolean, modifier: Modifier = Modifier) {
-    val accent = now.current?.category?.color ?: MaterialTheme.colorScheme.primary
+    // The running block's own colour. Free time has none, and then the accent is only the colour
+    // of the "NOW" label, which is text: it falls back to the orange that reads, not the one that
+    // fills.
+    val accent = now.current?.category?.color ?: LocalAccentText.current
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
