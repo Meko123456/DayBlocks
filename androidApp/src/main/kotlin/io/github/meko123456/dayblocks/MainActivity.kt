@@ -5,7 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import io.github.meko123456.dayblocks.composeapp.App
+import io.github.meko123456.dayblocks.composeapp.AndroidApp
 import io.github.meko123456.dayblocks.composeapp.navigation.AppLink
 import io.github.meko123456.dayblocks.composeapp.navigation.AppLinks
 import io.github.meko123456.dayblocks.core.domain.model.NotificationKind
@@ -17,7 +17,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Only a fresh launch: after a rotation the same intent would open the review again.
         if (savedInstanceState == null) openFrom(intent)
-        setContent { App() }
+        setContent { AndroidApp() }
     }
 
     /** A notification tapped while the app is already open. */
