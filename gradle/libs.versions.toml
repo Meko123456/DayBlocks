@@ -4,7 +4,7 @@
 # builds green.
 agp = "9.4.1"
 kotlin = "2.4.20"
-composeMultiplatform = "1.11.0"
+composeMultiplatform = "1.12.1"
 material3 = "1.13.0-alpha01"
 androidx-activity = "1.13.0"
 androidx-core = "1.19.1"
