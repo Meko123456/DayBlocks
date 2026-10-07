@@ -79,6 +79,19 @@ class TemplatesViewModelTest {
     }
 
     @Test
+    fun anEmojiTypedAtTheNameCapIsLeftOutRatherThanKeptInHalf() = runTest {
+        blocks.upsert(block("w", monday, "Deep work", at(9), at(12)))
+        val vm = screen()
+        val upToTheCap = "x".repeat(TemplatesViewModel.MAX_NAME - 1)
+        vm.state.test {
+            loaded()
+            vm.onIntent(TemplatesIntent.SaveTodayTapped); runCurrent()
+            vm.onIntent(TemplatesIntent.DraftNameChanged(upToTheCap + "\uD83D\uDD25")); runCurrent() // 🔥, two chars
+            assertEquals(upToTheCap, expectMostRecentItem().draftName)
+        }
+    }
+
+    @Test
     fun applyingToAnEmptyTodayFillsItWithoutAsking() = runTest {
         templates.upsert(weekday)
         val vm = screen(); vm.state.test { loaded() }

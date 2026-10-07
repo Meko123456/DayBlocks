@@ -1,6 +1,7 @@
 package io.github.meko123456.dayblocks.feature.templates
 
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.capped
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
 import io.github.meko123456.dayblocks.core.domain.model.Template
 import io.github.meko123456.dayblocks.core.domain.model.TemplateId
@@ -69,7 +70,7 @@ class TemplatesViewModel(
             TemplatesIntent.SaveTodayTapped ->
                 if (todayPlan.isEmpty()) emit(TemplatesEffect.Message("Plan something today first, then save it."))
                 else reduce { copy(naming = true, draftName = "") }
-            is TemplatesIntent.DraftNameChanged -> reduce { copy(draftName = intent.name.take(MAX_NAME)) }
+            is TemplatesIntent.DraftNameChanged -> reduce { copy(draftName = intent.name.capped(MAX_NAME)) }
             TemplatesIntent.NameConfirmed -> {
                 val name = state.value.draftName.trim()
                 if (name.isEmpty()) return

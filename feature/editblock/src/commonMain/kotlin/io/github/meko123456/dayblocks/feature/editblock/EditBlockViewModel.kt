@@ -1,6 +1,7 @@
 package io.github.meko123456.dayblocks.feature.editblock
 
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.capped
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
 import io.github.meko123456.dayblocks.core.domain.model.BlockId
 import io.github.meko123456.dayblocks.core.domain.model.DaySpan
@@ -85,7 +86,7 @@ class EditBlockViewModel(
 
     override suspend fun handle(intent: EditBlockIntent) {
         when (intent) {
-            is EditBlockIntent.TitleChanged -> reduce { copy(title = intent.title.take(MAX_TITLE)).withSuggestions() }
+            is EditBlockIntent.TitleChanged -> reduce { copy(title = intent.title.capped(MAX_TITLE)).withSuggestions() }
             is EditBlockIntent.SuggestionPicked -> reduce { copy(title = intent.title, suggestions = emptyList()) }
             is EditBlockIntent.CategoryPicked -> reduce { copy(category = intent.category) }
             is EditBlockIntent.StartStepped -> reduce { copy(span = span.withStartStepped(intent.steps)).withOverlaps() }

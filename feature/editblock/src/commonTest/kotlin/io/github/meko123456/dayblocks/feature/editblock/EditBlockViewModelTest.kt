@@ -138,6 +138,18 @@ class EditBlockViewModelTest {
         }
     }
 
+    @Test
+    fun anEmojiTypedAtTheTitleCapIsLeftOutRatherThanKeptInHalf() = runTest {
+        val vm = editor(EditBlockArgs(monday))
+        val upToTheCap = "x".repeat(EditBlockViewModel.MAX_TITLE - 1)
+        vm.state.test {
+            awaitLoaded()
+            vm.onIntent(EditBlockIntent.TitleChanged(upToTheCap + "\uD83D\uDD25")) // 🔥, two chars
+            runCurrent()
+            assertEquals(upToTheCap, expectMostRecentItem().title)
+        }
+    }
+
     // --- quarter-hour stepping ------------------------------------------------------------------
 
     @Test
