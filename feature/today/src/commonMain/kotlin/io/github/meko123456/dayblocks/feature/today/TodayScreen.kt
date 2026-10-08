@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -204,7 +205,9 @@ private fun Header(state: TodayState, onIntent: (TodayIntent) -> Unit) {
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
+        // A flow, not a row: at 200% text the four links are wider than the screen, and a row
+        // squeezed "Stats" onto two lines and left no room at all for Settings.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
             TextButton(onClick = { onIntent(TodayIntent.CheckInTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Check-in") }
             TextButton(onClick = { onIntent(TodayIntent.TemplatesTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Templates") }
             TextButton(onClick = { onIntent(TodayIntent.StatsTapped) }, contentPadding = PaddingValues(horizontal = 8.dp), colors = accentTextButtonColors()) { Text("Stats") }
