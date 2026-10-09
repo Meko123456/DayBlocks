@@ -4,6 +4,7 @@ import io.github.meko123456.dayblocks.core.buddy.BuddyVoice
 import io.github.meko123456.dayblocks.core.buddy.Situation
 import io.github.meko123456.dayblocks.core.buddy.Slots
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.capped
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.model.BuddyTone
@@ -40,7 +41,7 @@ class OnboardingViewModel(
     override suspend fun handle(intent: OnboardingIntent) {
         when (intent) {
             is OnboardingIntent.NameChanged -> reduce {
-                val name = intent.text.take(BuddySettings.MAX_NAME_LENGTH)
+                val name = intent.text.capped(BuddySettings.MAX_NAME_LENGTH)
                 copy(name = name, samples = samplesFor(name.trim().ifEmpty { BuddySettings.DEFAULT_NAME }))
             }
             is OnboardingIntent.TonePicked -> reduce { copy(tone = intent.tone) }

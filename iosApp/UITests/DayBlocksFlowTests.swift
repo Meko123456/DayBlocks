@@ -64,6 +64,24 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(bloop.waitForExistence(timeout: 30), "the buddy did not take its new name")
     }
 
+    func testANameCutAtTheLimitKeepsWholeCharacters() {
+        let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
+        XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
+        kubi.tap()
+
+        let name = app.textViews["Name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
+        name.tap()
+        // Nineteen letters and 🔥, which is two UTF-16 units: one over the 20 a name may have.
+        // take(20) kept the first half of the emoji, and the buddy was named with a broken character.
+        let letters = String(repeating: "x", count: 19)
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + letters + "🔥")
+        app.buttons["Save"].tap()
+
+        let renamed = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", letters + ",")).firstMatch
+        XCTAssertTrue(renamed.waitForExistence(timeout: 30), "the name was not cut back to the 19 letters")
+    }
+
     func testRatingABlockAtTheCheckInScoresTheDay() {
         addBlock("Deep work")
         app.buttons["Check-in"].tap()

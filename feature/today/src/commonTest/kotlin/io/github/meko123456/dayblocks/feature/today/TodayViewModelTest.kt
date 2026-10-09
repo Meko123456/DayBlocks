@@ -339,6 +339,19 @@ class TodayViewModelTest {
     }
 
     @Test
+    fun aNameCutAtTheLimitKeepsWholeCharacters() = runTest {
+        val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 30))
+        vm.state.test {
+            awaitLoaded()
+            vm.onIntent(TodayIntent.BuddyTapped)
+            // 19 letters and 🔥, which is two chars: one over the limit, and take(20) kept half of it.
+            vm.onIntent(TodayIntent.RenameChanged("x".repeat(19) + "🔥"))
+            assertEquals("x".repeat(19), expectMostRecentItemAfter { it.renaming?.startsWith("x") == true }.renaming)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun theRenameDialogSurvivesTheClockTicking() = runTest {
         val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 30))
         vm.state.test {

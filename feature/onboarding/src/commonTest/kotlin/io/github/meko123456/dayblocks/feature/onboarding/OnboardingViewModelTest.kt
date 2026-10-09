@@ -50,6 +50,15 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun aNameCutAtTheLimitKeepsWholeCharacters() = runTest {
+        val vm = onboarding()
+        // 19 letters and 🔥, which is two chars: one over the limit, and take(20) kept half of it.
+        vm.onIntent(OnboardingIntent.NameChanged("x".repeat(19) + "🔥"))
+        runCurrent()
+        assertEquals("x".repeat(19), vm.state.value.name)
+    }
+
+    @Test
     fun thePagesGoForwardAndBack() = runTest {
         val vm = onboarding()
         vm.onIntent(OnboardingIntent.NextTapped)

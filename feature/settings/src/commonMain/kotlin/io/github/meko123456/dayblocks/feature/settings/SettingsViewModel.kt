@@ -1,6 +1,7 @@
 package io.github.meko123456.dayblocks.feature.settings
 
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.capped
 import io.github.meko123456.dayblocks.core.designsystem.mvi.MviViewModel
 import io.github.meko123456.dayblocks.core.domain.model.BuddySettings
 import io.github.meko123456.dayblocks.core.domain.repository.BackupRepository
@@ -36,7 +37,7 @@ class SettingsViewModel(
     override suspend fun handle(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.NameChanged -> {
-                val draft = intent.text.take(BuddySettings.MAX_NAME_LENGTH)
+                val draft = intent.text.capped(BuddySettings.MAX_NAME_LENGTH)
                 reduce { copy(nameDraft = draft) }
                 val name = draft.trim()
                 if (name.isNotEmpty()) settings.updateBuddy { it.copy(name = name) }

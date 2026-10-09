@@ -5,6 +5,7 @@ import io.github.meko123456.dayblocks.core.buddy.TodayBuddy
 import io.github.meko123456.dayblocks.core.buddy.TodaySnapshot
 import io.github.meko123456.dayblocks.core.common.ClockStyle
 import io.github.meko123456.dayblocks.core.common.TimeProvider
+import io.github.meko123456.dayblocks.core.common.capped
 import io.github.meko123456.dayblocks.core.common.formatClock
 import io.github.meko123456.dayblocks.core.common.formatDuration
 import io.github.meko123456.dayblocks.core.common.minuteTicks
@@ -102,7 +103,7 @@ class TodayViewModel(
     override suspend fun handle(intent: TodayIntent) {
         when (intent) {
             TodayIntent.BuddyTapped -> return reduce { copy(renaming = buddy.name) }
-            is TodayIntent.RenameChanged -> return reduce { copy(renaming = intent.text.take(BuddySettings.MAX_NAME_LENGTH)) }
+            is TodayIntent.RenameChanged -> return reduce { copy(renaming = intent.text.capped(BuddySettings.MAX_NAME_LENGTH)) }
             TodayIntent.RenameDismissed -> return reduce { copy(renaming = null) }
             TodayIntent.RenameConfirmed -> {
                 val name = state.value.renaming?.trim().orEmpty()

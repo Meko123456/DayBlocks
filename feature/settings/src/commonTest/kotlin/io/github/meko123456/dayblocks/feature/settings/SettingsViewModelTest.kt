@@ -46,6 +46,16 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun aNameCutAtTheLimitKeepsWholeCharacters() = runTest {
+        val vm = screen()
+        // 19 letters and 🔥, which is two chars: one over the limit. take(20) kept half the emoji,
+        // and the buddy was saved with a broken character at the end of its name.
+        send(vm, SettingsIntent.NameChanged("x".repeat(19) + "🔥"))
+        assertEquals("x".repeat(19), settings.buddy.value.name)
+        assertEquals("x".repeat(19), vm.state.value.nameDraft)
+    }
+
+    @Test
     fun toneQuietHoursAndTheCapAreSavedAndKeptSensible() = runTest {
         val vm = screen()
         send(vm, SettingsIntent.TonePicked(BuddyTone.Pushy), SettingsIntent.QuietStartMoved(30), SettingsIntent.QuietEndMoved(-30))
