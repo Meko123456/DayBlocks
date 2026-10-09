@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -163,8 +164,11 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit, no
 private fun RenameDialog(state: TodayState, onIntent: (TodayIntent) -> Unit) {
     val draft = state.renaming ?: return
     // Opens focused with the old name selected, so typing a new one replaces it. The selection is
-    // this dialog's business; the ViewModel only ever sees the text.
-    var field by remember { mutableStateOf(TextFieldValue(draft, selection = TextRange(0, draft.length))) }
+    // this dialog's business; the ViewModel only ever sees the text. Saved, cursor included: rebuilt
+    // after a rotation, the field selected the whole name typed so far, and the next key replaced it.
+    var field by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(draft, selection = TextRange(0, draft.length)))
+    }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { focus.requestFocus() }
     AlertDialog(
