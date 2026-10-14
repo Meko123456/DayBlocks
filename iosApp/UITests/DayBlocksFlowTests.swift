@@ -147,7 +147,14 @@ final class DayBlocksFlowTests: XCTestCase {
 
         let save = app.buttons["Save"]
         XCTAssertTrue(save.waitForExistence(timeout: 30))
+        // Tapped once it is enabled, and again if the editor is still up. On a busy CI runner (14
+        // October 2026) the tap came 1.7 s after the typing and changed nothing: either the title
+        // had not reached the editor, so Save was still disabled, or the tap only took the field's
+        // focus away. A second tap can't save twice, because a save closes the editor.
+        let enabled = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isEnabled == true"), object: save)
+        _ = XCTWaiter().wait(for: [enabled], timeout: 30)
         save.tap()
+        if !app.staticTexts["Today"].waitForExistence(timeout: 15), save.exists { save.tap() }
 
         // Back on Today, drawn from the database the editor just wrote to.
         XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 30), "did not return to Today")
