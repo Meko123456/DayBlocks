@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -271,8 +272,21 @@ private fun NowCardView(now: NowCard, is24Hour: Boolean, modifier: Modifier = Mo
     }
 }
 
-/** Wide enough for "10:00 AM" on one line; the 24-hour style needs less. */
-private fun labelColumn(is24Hour: Boolean): Dp = if (is24Hour) 56.dp else 76.dp
+/**
+ * Wide enough for the widest hour label on one line: 76dp holds "10:00 AM" and 56dp the 24-hour
+ * style at the default text size. Larger text measures wider. Fixed widths cut "11:00" to "11:0"
+ * at the largest iOS text size, and "11:00 AM" to "11:00" at 2x on Android.
+ */
+@Composable
+private fun labelColumn(labels: List<String>, is24Hour: Boolean): Dp {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.labelSmall
+    val widest = with(LocalDensity.current) {
+        labels.maxOfOrNull { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width }?.toDp() ?: 0.dp
+    }
+    // 12dp of start padding and 8dp before the grid line.
+    return maxOf(if (is24Hour) 56.dp else 76.dp, widest + 20.dp)
+}
 
 @Composable
 private fun Timeline(
@@ -284,7 +298,7 @@ private fun Timeline(
 ) {
     val window = state.window
     val hours = window.durationMinutes / 60
-    val labelWidth = labelColumn(is24Hour)
+    val labelWidth = labelColumn((0..hours).map { formatClock(window.startMinutes + it * 60, is24Hour) }, is24Hour)
     val minuteHeight = hourHeight / 60
     fun yOf(minute: Int): Dp = minuteHeight * (minute - window.startMinutes)
 
