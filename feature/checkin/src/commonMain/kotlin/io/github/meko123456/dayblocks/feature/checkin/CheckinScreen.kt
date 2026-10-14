@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -114,6 +116,7 @@ internal fun CheckinContent(state: CheckinState, onIntent: (CheckinIntent) -> Un
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun BlockRow(row: CheckinRow, is24Hour: Boolean, onIntent: (CheckinIntent) -> Unit) {
     Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp), colors = surfaceCard(), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
@@ -128,7 +131,9 @@ private fun BlockRow(row: CheckinRow, is24Hour: Boolean, onIntent: (CheckinInten
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Wraps rather than squeezing: three abreast at the largest iOS text size, "Skipped"
+            // broke into "Skippe d".
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BlockOutcome.entries.forEach { outcome ->
                     FilterChip(
                         selected = row.shown == outcome,
