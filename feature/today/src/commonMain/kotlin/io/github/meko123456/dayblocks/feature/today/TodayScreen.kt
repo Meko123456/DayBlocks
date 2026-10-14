@@ -50,12 +50,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -137,29 +139,54 @@ internal fun TodayContent(state: TodayState, onIntent: (TodayIntent) -> Unit, no
         // The header and the Now card stay put; only the timeline scrolls. The first version
         // scrolled everything to the present on open — which pushed the Now card, the one thing
         // this screen exists to show, straight off the top.
-        Column(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Header(state, onIntent)
-            BuddySays(
-                name = state.buddy.name,
-                mood = state.buddy.mood,
-                line = state.buddy.line,
-                onFaceTapped = { onIntent(TodayIntent.BuddyTapped) },
-            )
-            // A slot the app shell fills — today, the "reminders are off" strip — so this screen
-            // shows it without knowing anything about notifications.
-            notice()
-            NowCardView(state.now, is24Hour, modifier = Modifier.padding(horizontal = 16.dp))
-            Column(Modifier.weight(1f).verticalScroll(scroll)) {
-                Spacer(Modifier.height(8.dp))
-                Timeline(state, is24Hour, hourHeight, onIntent, modifier = Modifier.padding(end = 16.dp))
-                Spacer(Modifier.height(88.dp)) // clear of the FAB
+        //
+        // That needs room, though. With large text on a small phone the fixed part outgrew the
+        // screen: the timeline got no height at all, the Now card was cut off, and nothing could be
+        // scrolled to. So the timeline always keeps at least [MinTimelineHeight], and the screen as a
+        // whole scrolls when that runs past the bottom. When everything fits, the outer scroll has
+        // nothing to do and the screen is exactly as it was.
+        val outer = rememberScrollState()
+        BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
+            val viewport = constraints.maxHeight
+            Layout(
+                modifier = Modifier.verticalScroll(outer),
+                content = {
+                    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Header(state, onIntent)
+                        BuddySays(
+                            name = state.buddy.name,
+                            mood = state.buddy.mood,
+                            line = state.buddy.line,
+                            onFaceTapped = { onIntent(TodayIntent.BuddyTapped) },
+                        )
+                        // A slot the app shell fills — today, the "reminders are off" strip — so this
+                        // screen shows it without knowing anything about notifications.
+                        notice()
+                        NowCardView(state.now, is24Hour, modifier = Modifier.padding(horizontal = 16.dp))
+                    }
+                    Column(Modifier.verticalScroll(scroll)) {
+                        Spacer(Modifier.height(8.dp))
+                        Timeline(state, is24Hour, hourHeight, onIntent, modifier = Modifier.padding(end = 16.dp))
+                        Spacer(Modifier.height(88.dp)) // clear of the FAB
+                    }
+                },
+            ) { measurables, outerConstraints ->
+                val width = outerConstraints.maxWidth
+                val gap = 12.dp.roundToPx()
+                val fixed = measurables[0].measure(Constraints(maxWidth = width))
+                val timelineHeight = maxOf(viewport - fixed.height - gap, MinTimelineHeight.roundToPx())
+                val timeline = measurables[1].measure(Constraints.fixed(width, timelineHeight))
+                layout(width, fixed.height + gap + timeline.height) {
+                    fixed.place(0, 0)
+                    timeline.place(0, fixed.height + gap)
+                }
             }
         }
     }
 }
+
+/** About three hours of the day: room to see what comes next, however large the text above. */
+private val MinTimelineHeight = 240.dp
 
 @Composable
 private fun RenameDialog(state: TodayState, onIntent: (TodayIntent) -> Unit) {
