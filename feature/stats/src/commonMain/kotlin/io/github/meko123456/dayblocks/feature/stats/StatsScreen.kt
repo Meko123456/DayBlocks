@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.designsystem.accentTextButtonColors
 import org.koin.compose.viewmodel.koinViewModel
@@ -101,7 +103,7 @@ private fun WeekChart(week: List<DayBar>) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,
             ) {
-                Text(day.score?.let { "$it" } ?: "–", style = MaterialTheme.typography.labelSmall)
+                ChartLabel(day.score?.let { "$it" } ?: "–")
                 Spacer(Modifier.height(4.dp))
                 Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.BottomCenter) {
                     Box(
@@ -113,8 +115,24 @@ private fun WeekChart(week: List<DayBar>) {
                     )
                 }
                 Spacer(Modifier.height(4.dp))
-                Text(label, style = MaterialTheme.typography.labelSmall, fontWeight = if (day.isToday) FontWeight.Bold else FontWeight.Normal)
+                ChartLabel(label, if (day.isToday) FontWeight.Bold else FontWeight.Normal)
             }
         }
     }
+}
+
+/**
+ * A bar's score or weekday, on one line and smaller if it must be. A seventh of the card is
+ * narrow, and at 2x text the weekdays wrapped mid-word, "We d", taking height from the bars.
+ */
+@Composable
+private fun ChartLabel(text: String, weight: FontWeight? = null) {
+    val style = MaterialTheme.typography.labelSmall
+    Text(
+        text,
+        style = style,
+        fontWeight = weight,
+        maxLines = 1,
+        autoSize = TextAutoSize.StepBased(minFontSize = 8.sp, maxFontSize = style.fontSize),
+    )
 }
