@@ -7,6 +7,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,9 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
@@ -76,6 +80,7 @@ fun SettingsScreen(onClose: () -> Unit, files: BackupFiles, viewModel: SettingsV
     SettingsContent(state, snackbar, viewModel::onIntent)
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, onIntent: (SettingsIntent) -> Unit) {
     val is24Hour = rememberIs24HourFormat()
@@ -103,7 +108,9 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
                     )
                 }
                 Text("Tone", style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Wraps rather than squeezing: three abreast at the largest text size, "Pushy" broke
+                // into "Pus hy".
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     BuddyTone.entries.forEach { tone ->
                         Choice(tone.name, selected = state.buddy.tone == tone) { onIntent(SettingsIntent.TonePicked(tone)) }
                     }
@@ -188,14 +195,43 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
     )
 }
 
+/**
+ * A label with its controls on the right. The label takes the room the controls leave, and moves
+ * above them when even its longest word would not fit there: squeezed, it broke words in two, as
+ * "Timel ine to" at the largest iOS text size.
+ */
 @Composable
 private fun Stepper(label: String, value: String, onLess: () -> Unit, onMore: () -> Unit) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Text(label, Modifier.weight(1f))
-        val tint = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
-        FilledTonalIconButton(onClick = onLess, colors = tint, modifier = Modifier.semantics { contentDescription = "Less: $label" }) { Text("−") }
-        Text(value, Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.SemiBold)
-        FilledTonalIconButton(onClick = onMore, colors = tint, modifier = Modifier.semantics { contentDescription = "More: $label" }) { Text("+") }
+    val tint = IconButtonDefaults.filledTonalIconButtonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
+    Layout(
+        modifier = Modifier.fillMaxWidth(),
+        content = {
+            Text(label)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                FilledTonalIconButton(onClick = onLess, colors = tint, modifier = Modifier.semantics { contentDescription = "Less: $label" }) { Text("−") }
+                Text(value, Modifier.padding(horizontal = 12.dp), fontWeight = FontWeight.SemiBold)
+                FilledTonalIconButton(onClick = onMore, colors = tint, modifier = Modifier.semantics { contentDescription = "More: $label" }) { Text("+") }
+            }
+        },
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val controls = measurables[1].measure(Constraints(maxWidth = width))
+        val room = (width - controls.width).coerceAtLeast(0)
+        val stacked = measurables[0].minIntrinsicWidth(Constraints.Infinity) > room
+        val text = measurables[0].measure(Constraints(maxWidth = if (stacked) width else room))
+        if (stacked) {
+            layout(width, text.height + controls.height) {
+                text.place(0, 0)
+                controls.place(width - controls.width, text.height)
+            }
+        } else {
+            val height = maxOf(text.height, controls.height)
+            layout(width, height) {
+                // Centred exactly as the Row this replaces centred them, rounding included.
+                text.place(0, Alignment.CenterVertically.align(text.height, height))
+                controls.place(width - controls.width, Alignment.CenterVertically.align(controls.height, height))
+            }
+        }
     }
 }
 
