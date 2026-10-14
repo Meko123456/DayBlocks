@@ -33,8 +33,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
@@ -121,9 +124,11 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
             }
 
             Section("When") {
-                TimeStepper("Starts", formatClock(state.span.startMinutes, is24Hour), { onIntent(EditBlockIntent.StartStepped(-1)) }, { onIntent(EditBlockIntent.StartStepped(1)) })
+                val labelWidth = stepperLabelWidth("Starts", "Ends")
+                TimeStepper("Starts", labelWidth, formatClock(state.span.startMinutes, is24Hour), { onIntent(EditBlockIntent.StartStepped(-1)) }, { onIntent(EditBlockIntent.StartStepped(1)) })
                 TimeStepper(
                     "Ends",
+                    labelWidth,
                     formatClock(state.span.endMinutes, is24Hour) + if (state.span.crossesMidnight) "  (next day)" else "",
                     { onIntent(EditBlockIntent.EndStepped(-1)) },
                     { onIntent(EditBlockIntent.EndStepped(1)) },
@@ -183,10 +188,24 @@ private fun Section(title: String, content: @Composable () -> Unit) {
     }
 }
 
+/**
+ * One width for both stepper labels: 64dp, or the wider label when the text is larger, so the two
+ * steppers line up at any size. A fixed 64dp broke "Starts" into "Star ts" at large text sizes.
+ */
 @Composable
-private fun TimeStepper(label: String, value: String, onEarlier: () -> Unit, onLater: () -> Unit) {
+private fun stepperLabelWidth(vararg labels: String): Dp {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.bodyLarge
+    val widest = with(LocalDensity.current) {
+        labels.maxOf { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width }.toDp()
+    }
+    return maxOf(64.dp, widest + 4.dp)
+}
+
+@Composable
+private fun TimeStepper(label: String, labelWidth: Dp, value: String, onEarlier: () -> Unit, onLater: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(label, modifier = Modifier.width(64.dp), style = MaterialTheme.typography.bodyLarge)
+        Text(label, modifier = Modifier.width(labelWidth), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
         FilledTonalIconButton(onClick = onEarlier) { Text("−", style = MaterialTheme.typography.titleLarge) }
         Text(
             value,
