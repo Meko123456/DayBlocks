@@ -44,10 +44,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.common.formatClock
@@ -141,7 +144,8 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
                     }
                 }
                 Text("Category colours", style = MaterialTheme.typography.labelLarge)
-                Category.entries.forEach { category -> ColorRow(category, custom = category in state.app.categoryColors, onIntent) }
+                val nameWidth = categoryNameWidth()
+                Category.entries.forEach { category -> ColorRow(category, nameWidth, custom = category in state.app.categoryColors, onIntent) }
             }
 
             Section("Your data") {
@@ -149,7 +153,9 @@ internal fun SettingsContent(state: SettingsState, snackbar: SnackbarHostState, 
                     "Everything stays on this phone. A backup is one file with every block, template and check-in in it — to keep, or to move to a new phone.",
                     style = MaterialTheme.typography.bodySmall,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Wraps rather than squeezing: side by side at 2x text, "Import" was pressed into a
+                // strip one letter wide.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { onIntent(SettingsIntent.ExportTapped) }) { Text("Export a backup") }
                     OutlinedButton(onClick = { onIntent(SettingsIntent.ImportTapped) }) { Text("Import") }
                 }
@@ -235,11 +241,26 @@ private fun Stepper(label: String, value: String, onLess: () -> Unit, onMore: ()
     }
 }
 
+/**
+ * One width for the category names: 88dp, or the widest name in the current text style, so every
+ * row's swatches start in the same place. A fixed 88dp broke "Reading" into "Readin g" at the
+ * largest iOS text size.
+ */
 @Composable
-private fun ColorRow(category: Category, custom: Boolean, onIntent: (SettingsIntent) -> Unit) {
+private fun categoryNameWidth(): Dp {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.bodyMedium
+    val widest = with(LocalDensity.current) {
+        Category.entries.maxOf { measurer.measure(it.name, style, maxLines = 1, softWrap = false).size.width }.toDp()
+    }
+    return maxOf(88.dp, widest + 4.dp)
+}
+
+@Composable
+private fun ColorRow(category: Category, nameWidth: Dp, custom: Boolean, onIntent: (SettingsIntent) -> Unit) {
     val current = category.color
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(category.name, Modifier.width(88.dp), style = MaterialTheme.typography.bodyMedium)
+        Text(category.name, Modifier.width(nameWidth), style = MaterialTheme.typography.bodyMedium, maxLines = 1)
         Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             CategoryPalette.forEach { swatch ->
                 val chosen = swatch == current
