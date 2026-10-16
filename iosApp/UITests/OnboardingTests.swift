@@ -4,6 +4,22 @@ import XCTest
 /// onboarding is done. Walks the whole introduction and lands on Today with a first template.
 final class OnboardingTests: XCTestCase {
 
+    /// Naming the buddy and pressing return moves on, as "Nice to meet you" does.
+    func testTheReturnKeyMovesOnFromNamingTheBuddy() {
+        continueAfterFailure = false
+        let app = XCUIApplication()
+        app.launchEnvironment["DAYBLOCKS_UITEST"] = "1"
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["Hi! I'm Kubi."].waitForExistence(timeout: 30), "onboarding did not open")
+        let name = app.textViews["What should I be called?"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30), "the name field is missing")
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
+
+        XCTAssertTrue(app.staticTexts["How should I talk to you?"].waitForExistence(timeout: 30), "return did not move on")
+    }
+
     func testANewUserMeetsTheBuddyAndStartsFromTheExampleDay() {
         continueAfterFailure = false
         let app = XCUIApplication()

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -30,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.meko123456.dayblocks.core.designsystem.accentOutlinedTextFieldColors
@@ -126,6 +129,11 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
                     onValueChange = { onIntent(TemplatesIntent.DraftNameChanged(it)) },
                     label = { Text("Template name") },
                     singleLine = true,
+                    // Done saves, as Save does, and does nothing while Save is disabled.
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        if (state.draftName.isNotBlank()) onIntent(TemplatesIntent.NameConfirmed)
+                    }),
                     colors = accentOutlinedTextFieldColors(),
                 )
             },

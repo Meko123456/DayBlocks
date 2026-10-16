@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -26,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -100,6 +103,9 @@ private fun Meet(state: OnboardingState, onIntent: (OnboardingIntent) -> Unit) {
         onValueChange = { onIntent(OnboardingIntent.NameChanged(it)) },
         label = { Text("What should I be called?") },
         singleLine = true,
+        // Done moves on, as "Nice to meet you" does.
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { onIntent(OnboardingIntent.NextTapped) }),
         modifier = Modifier.fillMaxWidth(),
         colors = accentOutlinedTextFieldColors(),
     )

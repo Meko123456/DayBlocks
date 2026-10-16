@@ -64,6 +64,38 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(bloop.waitForExistence(timeout: 30), "the buddy did not take its new name")
     }
 
+    /// The keyboard's return key does what the dialog's Save does; it used to only close the keyboard.
+    func testTheReturnKeySavesATemplate() {
+        addBlock("Deep work")
+        let templates = app.buttons["Templates"]
+        XCTAssertTrue(templates.waitForExistence(timeout: 30))
+        templates.tap()
+
+        let saveToday = app.buttons["Save today as a template"]
+        XCTAssertTrue(saveToday.waitForExistence(timeout: 30), "the Templates screen never opened")
+        saveToday.tap()
+        let name = app.textViews["Template name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
+        name.tap()
+        name.typeText("Weekday\n")
+
+        XCTAssertTrue(app.staticTexts["Weekday"].waitForExistence(timeout: 30), "return did not save the template")
+    }
+
+    func testTheReturnKeyRenamesTheBuddy() {
+        let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
+        XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
+        kubi.tap()
+
+        let name = app.textViews["Name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
+        name.tap()
+        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
+
+        let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
+        XCTAssertTrue(bloop.waitForExistence(timeout: 30), "return did not rename the buddy")
+    }
+
     func testANameCutAtTheLimitKeepsWholeCharacters() {
         let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
         XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
