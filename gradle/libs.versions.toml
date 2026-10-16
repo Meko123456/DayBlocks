@@ -3,7 +3,7 @@
 # checks this; a version that lands here alone drifts invisibly, because a drifted repo still
 # builds green.
 agp = "9.4.1"
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 composeMultiplatform = "1.12.1"
 material3 = "1.13.0-alpha01"
 androidx-activity = "1.13.0"
