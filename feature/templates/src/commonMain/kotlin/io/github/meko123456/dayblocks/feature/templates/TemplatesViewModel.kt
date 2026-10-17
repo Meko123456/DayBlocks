@@ -98,7 +98,17 @@ class TemplatesViewModel(
                 }
             }
             TemplatesIntent.ReplaceDismissed -> reduce { copy(pending = null) }
-            is TemplatesIntent.DeleteTapped -> templates.delete(intent.id)
+            is TemplatesIntent.DeleteTapped -> {
+                val template = state.value.templates.firstOrNull { it.id == intent.id } ?: return
+                val days = state.value.assignments.filterValues { it == intent.id }.keys.sortedBy { it.ordinal }
+                reduce { copy(deleting = PendingDelete(template.id, template.name, template.blocks.size, days)) }
+            }
+            TemplatesIntent.DeleteConfirmed -> {
+                val deleting = state.value.deleting ?: return
+                reduce { copy(deleting = null) }
+                templates.delete(deleting.id)
+            }
+            TemplatesIntent.DeleteDismissed -> reduce { copy(deleting = null) }
             TemplatesIntent.BackTapped -> emit(TemplatesEffect.Close)
         }
     }

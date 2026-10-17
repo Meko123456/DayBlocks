@@ -49,6 +49,38 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["1 block"].exists, "the template does not carry today's block")
     }
 
+    /// Delete asks first, says what goes, and keeps the template when the answer is no. It used to
+    /// take the template at one tap.
+    func testDeletingATemplateAsksFirst() {
+        addBlock("Deep work")
+        let templates = app.buttons["Templates"]
+        XCTAssertTrue(templates.waitForExistence(timeout: 30))
+        templates.tap()
+        let saveToday = app.buttons["Save today as a template"]
+        XCTAssertTrue(saveToday.waitForExistence(timeout: 30), "the Templates screen never opened")
+        saveToday.tap()
+        let name = app.textViews["Template name"]
+        XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
+        name.tap()
+        name.typeText("Weekday\n")
+        let listed = app.staticTexts["1 block"]
+        XCTAssertTrue(listed.waitForExistence(timeout: 30), "the saved template is not listed")
+
+        app.buttons["Delete"].tap()
+        let question = app.staticTexts["Delete “Weekday”?"]
+        XCTAssertTrue(question.waitForExistence(timeout: 30), "Delete took the template without asking")
+        XCTAssertTrue(app.staticTexts["Its 1 block goes with it."].exists, "the question did not say what goes")
+        app.buttons["Keep it"].tap()
+        XCTAssertTrue(question.waitForNonExistence(timeout: 30), "Keep it did not close the question")
+        XCTAssertTrue(listed.exists, "Keep it deleted the template anyway")
+
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(question.waitForExistence(timeout: 30), "the second Delete did not ask either")
+        // Two buttons say Delete while the question is up: the card's, and the dialog's on top of it.
+        app.buttons.matching(identifier: "Delete").allElementsBoundByIndex.last { $0.isHittable }?.tap()
+        XCTAssertTrue(listed.waitForNonExistence(timeout: 30), "the confirmed delete left the template listed")
+    }
+
     func testTheBuddyGreetsOnTodayAndAnswersToANewName() {
         let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
         XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")

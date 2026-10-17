@@ -160,6 +160,20 @@ internal fun TemplatesContent(state: TemplatesState, snackbar: SnackbarHostState
             dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.ReplaceDismissed) }, colors = accentTextButtonColors()) { Text("Keep today") } },
         )
     }
+
+    state.deleting?.let { deleting ->
+        AlertDialog(
+            onDismissRequest = { onIntent(TemplatesIntent.DeleteDismissed) },
+            title = { Text("Delete \u201c${deleting.name}\u201d?") },
+            text = { Text(deleting.consequences) },
+            confirmButton = {
+                TextButton(onClick = { onIntent(TemplatesIntent.DeleteConfirmed) }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { onIntent(TemplatesIntent.DeleteDismissed) }, colors = accentTextButtonColors()) { Text("Keep it") } },
+        )
+    }
 }
 
 @Composable

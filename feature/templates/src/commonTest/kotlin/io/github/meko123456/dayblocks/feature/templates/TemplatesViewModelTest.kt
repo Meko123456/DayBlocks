@@ -153,6 +153,27 @@ class TemplatesViewModelTest {
     }
 
     @Test
+    fun deletingATemplateAsksFirstAndKeepsItWhenDismissed() = runTest {
+        templates.upsert(weekday)
+        templates.assign(DayOfWeek.MONDAY, weekday.id)
+        templates.assign(DayOfWeek.FRIDAY, weekday.id)
+        val vm = screen()
+        vm.state.test {
+            loaded()
+            // Delete took it at one tap, and Monday and Friday stopped filling themselves.
+            vm.onIntent(TemplatesIntent.DeleteTapped(weekday.id)); runCurrent()
+            val asked = expectMostRecentItem()
+            assertEquals(PendingDelete(weekday.id, "Weekday", 1, listOf(DayOfWeek.MONDAY, DayOfWeek.FRIDAY)), asked.deleting)
+            assertEquals(listOf("Weekday"), asked.templates.map { it.name })
+            vm.onIntent(TemplatesIntent.DeleteDismissed); runCurrent()
+            val kept = expectMostRecentItem()
+            assertNull(kept.deleting)
+            assertEquals(listOf("Weekday"), kept.templates.map { it.name })
+            assertEquals(2, kept.assignments.size)
+        }
+    }
+
+    @Test
     fun deletingATemplateClearsTheWeekdaysItFilled() = runTest {
         templates.upsert(weekday)
         templates.assign(DayOfWeek.FRIDAY, weekday.id)
@@ -160,8 +181,23 @@ class TemplatesViewModelTest {
         vm.state.test {
             loaded()
             vm.onIntent(TemplatesIntent.DeleteTapped(weekday.id)); runCurrent()
+            vm.onIntent(TemplatesIntent.DeleteConfirmed); runCurrent()
             val s = expectMostRecentItem()
             assertTrue(s.templates.isEmpty() && s.assignments.isEmpty())
+            assertNull(s.deleting)
         }
+    }
+
+    @Test
+    fun theDeleteQuestionSaysWhatGoesWithTheTemplate() {
+        assertEquals("Its 1 block goes with it.", PendingDelete(weekday.id, "Weekday", 1, emptyList()).consequences)
+        assertEquals(
+            "Its 3 blocks go with it. Friday stops filling itself from it.",
+            PendingDelete(weekday.id, "Weekday", 3, listOf(DayOfWeek.FRIDAY)).consequences,
+        )
+        assertEquals(
+            "Its 3 blocks go with it. Monday, Wednesday and Friday stop filling themselves from it.",
+            PendingDelete(weekday.id, "Weekday", 3, listOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY)).consequences,
+        )
     }
 }

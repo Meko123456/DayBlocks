@@ -17,12 +17,43 @@ data class TemplatesState(
     val draftName: String = "",
     /** A replace waiting for confirmation, because today already has a plan. */
     val pending: PendingReplace? = null,
+    /** A template delete waiting for confirmation. */
+    val deleting: PendingDelete? = null,
 )
 
-/** Replacing a non-empty day always asks first: it is the one destructive thing on this screen. */
+/** Replacing a non-empty day always asks first. */
 sealed interface PendingReplace {
     data object CopyYesterday : PendingReplace
     data class ApplyTemplate(val id: TemplateId, val name: String) : PendingReplace
+}
+
+/**
+ * Deleting a template asks first as well. It went at one tap of Delete, for good, and the
+ * weekdays that filled from it stopped without a word; [days] are those weekdays, so the question
+ * can name them.
+ */
+data class PendingDelete(val id: TemplateId, val name: String, val blocks: Int, val days: List<DayOfWeek>) {
+    /** What goes with it, said under the question. */
+    val consequences: String
+        get() = buildString {
+            append(
+                when (blocks) {
+                    0 -> "It has no blocks."
+                    1 -> "Its 1 block goes with it."
+                    else -> "Its $blocks blocks go with it."
+                },
+            )
+            if (days.isNotEmpty()) {
+                append(" ").append(days.spoken())
+                append(if (days.size == 1) " stops filling itself from it." else " stop filling themselves from it.")
+            }
+        }
+}
+
+/** "Monday", "Monday and Friday", "Monday, Wednesday and Friday". */
+private fun List<DayOfWeek>.spoken(): String {
+    val names = map { day -> day.name.lowercase().replaceFirstChar { it.uppercase() } }
+    return if (names.size == 1) names.single() else names.dropLast(1).joinToString(", ") + " and " + names.last()
 }
 
 sealed interface TemplatesIntent {
@@ -36,6 +67,8 @@ sealed interface TemplatesIntent {
     data object ReplaceConfirmed : TemplatesIntent
     data object ReplaceDismissed : TemplatesIntent
     data class DeleteTapped(val id: TemplateId) : TemplatesIntent
+    data object DeleteConfirmed : TemplatesIntent
+    data object DeleteDismissed : TemplatesIntent
     data object BackTapped : TemplatesIntent
 }
 
