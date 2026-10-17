@@ -142,30 +142,48 @@ internal class SqlBackupRepository(
      */
     private fun BackupFile.checked(): BackupFile {
         blocks.forEach { b ->
-            LocalDate.parse(b.date)
-            Category.valueOf(b.category)
-            DaySpan(b.start, b.end)
             require(b.title.isNotBlank()) { "a block without a title" }
+            val block = "the block \u201c${b.title}\u201d"
+            said({ "$block is dated \u201c${b.date}\u201d, which isn't a date" }) { LocalDate.parse(b.date) }
+            said({ "$block has a category DayBlocks doesn't know (\u201c${b.category}\u201d)" }) { Category.valueOf(b.category) }
+            said({ "$block ${spanProblem(b.start, b.end)}" }) { DaySpan(b.start, b.end) }
         }
         require(blocks.map { it.id }.toSet().size == blocks.size) { "two blocks share an id" }
         templates.forEach { t ->
             require(t.name.isNotBlank()) { "a template without a name" }
             t.blocks.forEach { b ->
-                Category.valueOf(b.category)
-                DaySpan(b.start, b.end)
                 require(b.title.isNotBlank()) { "a template block without a title" }
+                val block = "the block \u201c${b.title}\u201d in the template \u201c${t.name}\u201d"
+                said({ "$block has a category DayBlocks doesn't know (\u201c${b.category}\u201d)" }) { Category.valueOf(b.category) }
+                said({ "$block ${spanProblem(b.start, b.end)}" }) { DaySpan(b.start, b.end) }
             }
         }
         val templateIds = templates.map { it.id }.toSet()
         weekdays.forEach { (day, id) ->
-            DayOfWeek.valueOf(day)
+            said({ "a template assigned to \u201c$day\u201d, which isn't a weekday" }) { DayOfWeek.valueOf(day) }
             require(id in templateIds) { "a weekday assigned to a template that is not in the file" }
         }
         records.forEach { r ->
-            r.answer?.let { CheckInAnswer.valueOf(it) }
-            r.outcome?.let { BlockOutcome.valueOf(it) }
+            r.answer?.let { said({ "a check-in answer DayBlocks doesn't know (\u201c$it\u201d)" }) { CheckInAnswer.valueOf(it) } }
+            r.outcome?.let { said({ "a block outcome DayBlocks doesn't know (\u201c$it\u201d)" }) { BlockOutcome.valueOf(it) } }
         }
         return this
+    }
+
+    private fun spanProblem(start: Int, end: Int) =
+        if (end <= start) "ends before it starts" else "doesn't fit in a day"
+}
+
+/**
+ * Runs [check], and if it refuses, says [what] instead. The parsers' and constructors' own words are
+ * code's ("No enum constant …Category.Napping", "end (480) must be after start (500)"), and they
+ * followed "This backup is damaged:" on screen.
+ */
+private inline fun said(what: () -> String, check: () -> Unit) {
+    try {
+        check()
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException(what(), e)
     }
 }
 

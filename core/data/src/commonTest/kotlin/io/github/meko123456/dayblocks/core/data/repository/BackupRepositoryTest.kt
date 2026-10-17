@@ -145,4 +145,34 @@ class BackupRepositoryTest {
             assertEquals(listOf("keep"), blocks().observeDay(monday).first().map { it.id.value })
         }
     }
+
+    @Test
+    fun aDamagedBackupSaysWhatIsWrongInWords() = runTest {
+        fillSource()
+        val json = with(source) { backup().export() }
+        with(target) {
+            // Each of these used to show the parser's or constructor's own message after
+            // "This backup is damaged:", such as "No enum constant …Category.Napping".
+            val category = backup().import(json.replace("\"category\": \"Exercise\"", "\"category\": \"Napping\""))
+            assertEquals(
+                "This backup is damaged: the block \u201cRun\u201d has a category DayBlocks doesn't know (\u201cNapping\u201d)",
+                assertIs<ImportResult.Rejected>(category).reason,
+            )
+            val date = backup().import(json.replace("\"date\": \"$tuesday\"", "\"date\": \"2026-02-30\""))
+            assertEquals(
+                "This backup is damaged: the block \u201cRun\u201d is dated \u201c2026-02-30\u201d, which isn't a date",
+                assertIs<ImportResult.Rejected>(date).reason,
+            )
+            val span = backup().import(json.replace("\"start\": 420", "\"start\": 500"))
+            assertEquals(
+                "This backup is damaged: the block \u201cRun\u201d ends before it starts",
+                assertIs<ImportResult.Rejected>(span).reason,
+            )
+            val weekday = backup().import(json.replace("\"MONDAY\":", "\"FUNDAY\":"))
+            assertEquals(
+                "This backup is damaged: a template assigned to \u201cFUNDAY\u201d, which isn't a weekday",
+                assertIs<ImportResult.Rejected>(weekday).reason,
+            )
+        }
+    }
 }
