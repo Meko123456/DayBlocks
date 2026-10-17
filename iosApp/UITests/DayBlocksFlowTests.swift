@@ -192,9 +192,16 @@ final class DayBlocksFlowTests: XCTestCase {
         // at descendants rather than at the element itself.
         let add = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Add block'")).firstMatch
         XCTAssertTrue(add.waitForExistence(timeout: 30), "the Add block button never appeared")
+        // Tapped once it is hittable, and again if the editor has not come up. On a busy CI runner
+        // (the run for ae6aa0e, 17 October 2026) the one tap went nowhere and "the editor never
+        // opened". Once the editor is up the button is gone, so the second tap cannot open two.
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: add)
+        _ = XCTWaiter().wait(for: [hittable], timeout: 30)
         add.tap()
+        let editor = app.staticTexts["New block"]
+        if !editor.waitForExistence(timeout: 15), add.exists, add.isHittable { add.tap() }
 
-        XCTAssertTrue(app.staticTexts["New block"].waitForExistence(timeout: 30), "the editor never opened")
+        XCTAssertTrue(editor.waitForExistence(timeout: 30), "the editor never opened")
         // Compose's OutlinedTextField reaches the iOS accessibility tree as a text *view*, labelled
         // with its placeholder — not as a text field, which is what app.textFields looks for.
         let title = app.textViews["What are you doing?"]
