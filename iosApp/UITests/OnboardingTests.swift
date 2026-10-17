@@ -14,8 +14,7 @@ final class OnboardingTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Hi! I'm Kubi."].waitForExistence(timeout: 30), "onboarding did not open")
         let name = app.textViews["What should I be called?"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the name field is missing")
-        name.tap()
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
+        name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
 
         XCTAssertTrue(app.staticTexts["How should I talk to you?"].waitForExistence(timeout: 30), "return did not move on")
     }

@@ -36,8 +36,7 @@ final class ReminderDeliveryTests: XCTestCase {
         add.tap()
         let title = app.textViews["What are you doing?"]
         XCTAssertTrue(title.waitForExistence(timeout: 10))
-        title.tap()
-        title.typeText("Focus")
+        title.typeAfterFocusing("Focus")
         let earlier = app.buttons.matching(identifier: "−")
         for _ in 0..<2 { earlier.element(boundBy: 0).tap() }
         for _ in 0..<2 { earlier.element(boundBy: 1).tap() }

@@ -41,8 +41,7 @@ final class DayBlocksFlowTests: XCTestCase {
         saveToday.tap()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
-        name.tap()
-        name.typeText("Weekday")
+        name.typeAfterFocusing("Weekday")
         app.buttons["Save"].tap()
 
         XCTAssertTrue(app.staticTexts["Weekday"].waitForExistence(timeout: 30), "the saved template is not listed")
@@ -61,8 +60,7 @@ final class DayBlocksFlowTests: XCTestCase {
         saveToday.tap()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
-        name.tap()
-        name.typeText("Weekday\n")
+        name.typeAfterFocusing("Weekday\n")
         let listed = app.staticTexts["1 block"]
         XCTAssertTrue(listed.waitForExistence(timeout: 30), "the saved template is not listed")
 
@@ -88,8 +86,7 @@ final class DayBlocksFlowTests: XCTestCase {
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
-        name.tap()
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
+        name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
         app.buttons["Save"].tap()
 
         let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
@@ -108,8 +105,7 @@ final class DayBlocksFlowTests: XCTestCase {
         saveToday.tap()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
-        name.tap()
-        name.typeText("Weekday\n")
+        name.typeAfterFocusing("Weekday\n")
 
         XCTAssertTrue(app.staticTexts["Weekday"].waitForExistence(timeout: 30), "return did not save the template")
     }
@@ -121,8 +117,7 @@ final class DayBlocksFlowTests: XCTestCase {
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
-        name.tap()
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
+        name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop\n")
 
         let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
         XCTAssertTrue(bloop.waitForExistence(timeout: 30), "return did not rename the buddy")
@@ -135,11 +130,10 @@ final class DayBlocksFlowTests: XCTestCase {
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
-        name.tap()
         // Nineteen letters and 🔥, which is two UTF-16 units: one over the 20 a name may have.
         // take(20) kept the first half of the emoji, and the buddy was named with a broken character.
         let letters = String(repeating: "x", count: 19)
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + letters + "🔥")
+        name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + letters + "🔥")
         app.buttons["Save"].tap()
 
         let renamed = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", letters + ",")).firstMatch
@@ -165,8 +159,7 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Your buddy"].waitForExistence(timeout: 30), "Settings never opened")
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30))
-        name.tap()
-        name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
+        name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
         app.buttons["‹ Back"].tap()
 
         let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
@@ -206,8 +199,7 @@ final class DayBlocksFlowTests: XCTestCase {
         // with its placeholder — not as a text field, which is what app.textFields looks for.
         let title = app.textViews["What are you doing?"]
         XCTAssertTrue(title.waitForExistence(timeout: 30))
-        title.tap()
-        title.typeText(text)
+        title.typeAfterFocusing(text)
 
         let save = app.buttons["Save"]
         XCTAssertTrue(save.waitForExistence(timeout: 30))
