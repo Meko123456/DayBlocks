@@ -27,7 +27,7 @@ jobs:
       # testAndroidHostTest at the root, not per module: naming modules is a filter, and a test
       # added to a module nobody listed would be collected by nobody while the tick stays green.
       - name: Unit tests, debug build, lint
-        run: ./gradlew testAndroidHostTest :androidApp:assembleDebug :androidApp:lintDebug --stacktrace
+        run: ./gradlew testAndroidHostTest :core:database:verifySqlDelightMigration :androidApp:assembleDebug :androidApp:lintDebug --stacktrace
 
       # A screenshot test that fails leaves what it drew and the difference next to the committed
       # PNG; keep them, or the failure says a screen changed without showing how.

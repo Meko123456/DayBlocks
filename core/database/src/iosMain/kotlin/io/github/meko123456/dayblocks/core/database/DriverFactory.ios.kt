@@ -31,7 +31,8 @@ actual class DriverFactory(private val name: String? = DATABASE_NAME) {
                 // foreign keys ON, and the usual way to change a parent table (create new, copy,
                 // drop old) would cascade-delete every child row at the drop. The first migration
                 // that rebuilds block or template must run `PRAGMA foreign_keys = OFF` itself for
-                // its duration. Schema version 1 has no migrations, so nothing is affected yet.
+                // its duration. The one migration so far, 1 → 2, only adds a table, so nothing is
+                // affected yet.
                 extendedConfig = DatabaseConfiguration.Extended(foreignKeyConstraints = true),
             ),
         )
