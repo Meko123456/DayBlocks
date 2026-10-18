@@ -34,15 +34,15 @@ final class DayBlocksFlowTests: XCTestCase {
         addBlock("Deep work")
         let templates = app.buttons["Templates"]
         XCTAssertTrue(templates.waitForExistence(timeout: 30))
-        templates.tap()
+        templates.tapWhenHittable()
 
         let saveToday = app.buttons["Save today as a template"]
         XCTAssertTrue(saveToday.waitForExistence(timeout: 30), "the Templates screen never opened")
-        saveToday.tap()
+        saveToday.tapWhenHittable()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
         name.typeAfterFocusing("Weekday")
-        app.buttons["Save"].tap()
+        app.buttons["Save"].tapWhenHittable()
 
         XCTAssertTrue(app.staticTexts["Weekday"].waitForExistence(timeout: 30), "the saved template is not listed")
         XCTAssertTrue(app.staticTexts["1 block"].exists, "the template does not carry today's block")
@@ -54,25 +54,25 @@ final class DayBlocksFlowTests: XCTestCase {
         addBlock("Deep work")
         let templates = app.buttons["Templates"]
         XCTAssertTrue(templates.waitForExistence(timeout: 30))
-        templates.tap()
+        templates.tapWhenHittable()
         let saveToday = app.buttons["Save today as a template"]
         XCTAssertTrue(saveToday.waitForExistence(timeout: 30), "the Templates screen never opened")
-        saveToday.tap()
+        saveToday.tapWhenHittable()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
         name.typeAfterFocusing("Weekday\n")
         let listed = app.staticTexts["1 block"]
         XCTAssertTrue(listed.waitForExistence(timeout: 30), "the saved template is not listed")
 
-        app.buttons["Delete"].tap()
+        app.buttons["Delete"].tapWhenHittable()
         let question = app.staticTexts["Delete “Weekday”?"]
         XCTAssertTrue(question.waitForExistence(timeout: 30), "Delete took the template without asking")
         XCTAssertTrue(app.staticTexts["Its 1 block goes with it."].exists, "the question did not say what goes")
-        app.buttons["Keep it"].tap()
+        app.buttons["Keep it"].tapWhenHittable()
         XCTAssertTrue(question.waitForNonExistence(timeout: 30), "Keep it did not close the question")
         XCTAssertTrue(listed.exists, "Keep it deleted the template anyway")
 
-        app.buttons["Delete"].tap()
+        app.buttons["Delete"].tapWhenHittable()
         XCTAssertTrue(question.waitForExistence(timeout: 30), "the second Delete did not ask either")
         // Two buttons say Delete while the question is up: the card's, and the dialog's on top of it.
         app.buttons.matching(identifier: "Delete").allElementsBoundByIndex.last { $0.isHittable }?.tap()
@@ -82,12 +82,12 @@ final class DayBlocksFlowTests: XCTestCase {
     func testTheBuddyGreetsOnTodayAndAnswersToANewName() {
         let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
         XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
-        kubi.tap()
+        kubi.tapWhenHittable()
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
         name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
-        app.buttons["Save"].tap()
+        app.buttons["Save"].tapWhenHittable()
 
         let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
         XCTAssertTrue(bloop.waitForExistence(timeout: 30), "the buddy did not take its new name")
@@ -98,11 +98,11 @@ final class DayBlocksFlowTests: XCTestCase {
         addBlock("Deep work")
         let templates = app.buttons["Templates"]
         XCTAssertTrue(templates.waitForExistence(timeout: 30))
-        templates.tap()
+        templates.tapWhenHittable()
 
         let saveToday = app.buttons["Save today as a template"]
         XCTAssertTrue(saveToday.waitForExistence(timeout: 30), "the Templates screen never opened")
-        saveToday.tap()
+        saveToday.tapWhenHittable()
         let name = app.textViews["Template name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "the naming dialog never opened")
         name.typeAfterFocusing("Weekday\n")
@@ -113,7 +113,7 @@ final class DayBlocksFlowTests: XCTestCase {
     func testTheReturnKeyRenamesTheBuddy() {
         let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
         XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
-        kubi.tap()
+        kubi.tapWhenHittable()
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
@@ -126,7 +126,7 @@ final class DayBlocksFlowTests: XCTestCase {
     func testANameCutAtTheLimitKeepsWholeCharacters() {
         let kubi = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Kubi,'")).firstMatch
         XCTAssertTrue(kubi.waitForExistence(timeout: 30), "the buddy is not on Today")
-        kubi.tap()
+        kubi.tapWhenHittable()
 
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30), "tapping the buddy did not offer a rename")
@@ -134,7 +134,7 @@ final class DayBlocksFlowTests: XCTestCase {
         // take(20) kept the first half of the emoji, and the buddy was named with a broken character.
         let letters = String(repeating: "x", count: 19)
         name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + letters + "🔥")
-        app.buttons["Save"].tap()
+        app.buttons["Save"].tapWhenHittable()
 
         let renamed = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", letters + ",")).firstMatch
         XCTAssertTrue(renamed.waitForExistence(timeout: 30), "the name was not cut back to the 19 letters")
@@ -142,25 +142,25 @@ final class DayBlocksFlowTests: XCTestCase {
 
     func testRatingABlockAtTheCheckInScoresTheDay() {
         addBlock("Deep work")
-        app.buttons["Check-in"].tap()
+        app.buttons["Check-in"].tapWhenHittable()
         XCTAssertTrue(app.staticTexts["How did today go?"].waitForExistence(timeout: 30), "the check-in never opened")
         XCTAssertTrue(app.staticTexts["Nothing rated yet"].exists)
 
         let done = app.descendants(matching: .any).matching(NSPredicate(format: "label == 'Done'")).firstMatch
         XCTAssertTrue(done.waitForExistence(timeout: 30))
-        done.tap()
+        done.tapWhenHittable()
         XCTAssertTrue(app.staticTexts["100%"].waitForExistence(timeout: 30), "rating the only block did not score the day")
     }
 
     func testASettingChangedReachesTodayAtOnce() {
         let settings = app.buttons["Settings"]
         XCTAssertTrue(settings.waitForExistence(timeout: 30))
-        settings.tap()
+        settings.tapWhenHittable()
         XCTAssertTrue(app.staticTexts["Your buddy"].waitForExistence(timeout: 30), "Settings never opened")
         let name = app.textViews["Name"]
         XCTAssertTrue(name.waitForExistence(timeout: 30))
         name.typeAfterFocusing(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 10) + "Bloop")
-        app.buttons["‹ Back"].tap()
+        app.buttons["‹ Back"].tapWhenHittable()
 
         let bloop = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH 'Bloop,'")).firstMatch
         XCTAssertTrue(bloop.waitForExistence(timeout: 30), "Today still shows the old name")
@@ -177,12 +177,12 @@ final class DayBlocksFlowTests: XCTestCase {
             XCTAssertFalse(notice.exists, "notifications are allowed, yet the notice says otherwise")
             return
         }
-        turnOn.tap()
+        turnOn.tapWhenHittable()
 
         // The permission alert belongs to SpringBoard, not to the app.
         let allow = XCUIApplication(bundleIdentifier: "com.apple.springboard").buttons["Allow"]
         XCTAssertTrue(allow.waitForExistence(timeout: 30), "iOS never asked")
-        allow.tap()
+        allow.tapWhenHittable()
         XCTAssertTrue(notice.waitForNonExistence(timeout: 30), "the notice is still up after allowing")
     }
 

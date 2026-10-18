@@ -26,23 +26,23 @@ final class OnboardingTests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.staticTexts["Hi! I'm Kubi."].waitForExistence(timeout: 30), "onboarding did not open")
-        app.buttons["Nice to meet you"].tap()
+        app.buttons["Nice to meet you"].tapWhenHittable()
 
         XCTAssertTrue(app.staticTexts["How should I talk to you?"].waitForExistence(timeout: 30))
         // Each tone speaks for itself before it is chosen.
         let sample = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Deep work'")).firstMatch
         XCTAssertTrue(sample.exists, "the tones have no sample lines")
-        app.buttons["That's the one"].tap()
+        app.buttons["That's the one"].tapWhenHittable()
 
         // The explanation comes first; iOS is only asked if the user says yes.
         XCTAssertTrue(app.staticTexts["Can I tap you on the shoulder?"].waitForExistence(timeout: 30))
-        app.buttons["Not now"].tap()
+        app.buttons["Not now"].tapWhenHittable()
 
         XCTAssertTrue(app.staticTexts["Let's plan today."].waitForExistence(timeout: 30))
-        app.buttons["Start from an example day"].tap()
+        app.buttons["Start from an example day"].tapWhenHittable()
 
         XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 30), "onboarding did not end on Today")
-        app.buttons["Templates"].tap()
+        app.buttons["Templates"].tapWhenHittable()
         XCTAssertTrue(app.staticTexts["Example day"].waitForExistence(timeout: 30), "the example day was not kept as a template")
     }
 }

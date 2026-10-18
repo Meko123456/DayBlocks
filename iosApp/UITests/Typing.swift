@@ -14,3 +14,19 @@ extension XCUIElement {
         typeText(text)
     }
 }
+
+extension XCUIElement {
+    /// Taps once the element can actually be hit, failing the test if it never can.
+    ///
+    /// An element can be in the tree before it can take a tap: the app still coming to the front, a
+    /// dialog still animating in. A tap then is synthesised where nothing listens, and the test
+    /// fails later, somewhere else, for the wrong reason. The run for ae6aa0e (17 October 2026)
+    /// lost its Add block tap that way.
+    func tapWhenHittable(timeout: TimeInterval = 30, file: StaticString = #filePath, line: UInt = #line) {
+        let hittable = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isHittable == true"), object: self)
+        XCTAssertEqual(XCTWaiter().wait(for: [hittable], timeout: timeout), .completed,
+                       "\(self) never became hittable", file: file, line: line)
+        tap()
+    }
+}
+

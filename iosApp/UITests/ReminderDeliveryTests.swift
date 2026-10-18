@@ -33,14 +33,14 @@ final class ReminderDeliveryTests: XCTestCase {
         // ends centres the block on that quarter hour, so its check-in is the next thing due.
         let add = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Add block'")).firstMatch
         XCTAssertTrue(add.waitForExistence(timeout: 10))
-        add.tap()
+        add.tapWhenHittable()
         let title = app.textViews["What are you doing?"]
         XCTAssertTrue(title.waitForExistence(timeout: 10))
         title.typeAfterFocusing("Focus")
         let earlier = app.buttons.matching(identifier: "−")
-        for _ in 0..<2 { earlier.element(boundBy: 0).tap() }
-        for _ in 0..<2 { earlier.element(boundBy: 1).tap() }
-        app.buttons["Save"].tap()
+        for _ in 0..<2 { earlier.element(boundBy: 0).tapWhenHittable() }
+        for _ in 0..<2 { earlier.element(boundBy: 1).tapWhenHittable() }
+        app.buttons["Save"].tapWhenHittable()
         XCTAssertTrue(app.staticTexts["Today"].waitForExistence(timeout: 10))
 
         XCUIDevice.shared.press(.home)
@@ -52,7 +52,7 @@ final class ReminderDeliveryTests: XCTestCase {
         XCTAssertTrue(distracted.waitForExistence(timeout: 10), "the check-in has no answer buttons")
         XCTAssertTrue(springboard.buttons["On it ✅"].exists)
         XCTAssertTrue(springboard.buttons["Skip this block"].exists)
-        distracted.tap()
+        distracted.tapWhenHittable()
 
         let followUp = notification(containing: "No stress")
         XCTAssertTrue(followUp.waitForExistence(timeout: 11 * 60), "no follow-up after Got distracted")
@@ -68,9 +68,9 @@ final class ReminderDeliveryTests: XCTestCase {
     private func allowNotificationsIfAsked(in app: XCUIApplication) {
         let turnOn = app.buttons["Turn on"]
         guard turnOn.waitForExistence(timeout: 5) else { return }
-        turnOn.tap()
+        turnOn.tapWhenHittable()
         let allow = springboard.buttons["Allow"]
         XCTAssertTrue(allow.waitForExistence(timeout: 10), "iOS never asked")
-        allow.tap()
+        allow.tapWhenHittable()
     }
 }
