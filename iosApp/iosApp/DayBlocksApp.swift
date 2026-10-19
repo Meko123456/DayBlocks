@@ -36,8 +36,8 @@ struct DayBlocksApp: App {
                     default: break
                     }
                 }
-                // Midnight, a time zone change, the clock being set: the pending notifications were
-                // worked out against a clock that is no longer the one on the wall.
+                // Midnight, a time zone change, the clock being set: the pending notifications and the
+                // widget's timeline were worked out against a clock that is no longer the one on the wall.
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
                     Self.reschedule()
                 }
@@ -48,8 +48,13 @@ struct DayBlocksApp: App {
         }
         .backgroundTask(.appRefresh(Self.refreshTask)) {
             Self.requestRefresh()
+            // A suspended app wakes with the zone it was suspended in.
+            NSTimeZone.resetSystemTimeZone()
             await withCheckedContinuation { continuation in
                 RemindersIosKt.rescheduleReminders { continuation.resume() }
+            }
+            await withCheckedContinuation { continuation in
+                RemindersIosKt.refreshWidgets { continuation.resume() }
             }
         }
     }
@@ -58,6 +63,7 @@ struct DayBlocksApp: App {
         // Foundation caches the system time zone until it is told to forget it.
         NSTimeZone.resetSystemTimeZone()
         RemindersIosKt.rescheduleReminders {}
+        RemindersIosKt.refreshWidgets {}
     }
 
     /// Asks iOS for a chance to roll the window forward while the app is closed. iOS decides when,

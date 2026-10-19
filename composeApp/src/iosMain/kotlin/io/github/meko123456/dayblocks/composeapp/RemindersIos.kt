@@ -50,6 +50,22 @@ fun rescheduleReminders(done: () -> Unit) {
     }
 }
 
+/**
+ * At the same moments as [rescheduleReminders]: the widget's timeline was worked out against the
+ * same clock, and otherwise only a new planning day or an edit to the plan redraws it. After a
+ * flight the widget kept the old zone's times until one of those came; the background refresh is
+ * also the only chance to move it into a new day while the app stays closed.
+ */
+fun refreshWidgets(done: () -> Unit) {
+    reminders.launch {
+        try {
+            KoinPlatform.getKoin().get<WidgetUpdater>().refreshNow()
+        } finally {
+            done()
+        }
+    }
+}
+
 /** When one of a check-in's buttons is tapped. [answer] is the button's identifier: an answer's name. */
 fun answerReminder(blockId: String, answer: String, done: () -> Unit) {
     val parsed = CheckInAnswer.entries.firstOrNull { it.name == answer }
