@@ -23,4 +23,6 @@
     <string name="answer_on_it">On it ✅</string>
     <string name="answer_got_distracted">Got distracted 😅</string>
     <string name="answer_skip_block">Skip this block</string>
+    <string name="shortcut_add_block_short">Add block</string>
+    <string name="shortcut_add_block_long">Add a block</string>
 </resources>

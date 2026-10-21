@@ -91,9 +91,20 @@ fun TodayScreen(
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit,
     notice: @Composable () -> Unit = {},
+    addBlockRequested: Boolean = false,
+    onAddBlockHandled: () -> Unit = {},
     viewModel: TodayViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // The launcher's Add a block shortcut does what + does, through the view model, which knows
+    // the day being planned.
+    LaunchedEffect(addBlockRequested) {
+        if (addBlockRequested) {
+            viewModel.onIntent(TodayIntent.AddBlockTapped)
+            onAddBlockHandled()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->

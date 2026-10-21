@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long-press DayBlocks' icon: a new block for the day being planned, as + on Today does. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add_block"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add_block_short"
+        android:shortcutLongLabel="@string/shortcut_add_block_long">
+        <intent
+            android:action="io.github.meko123456.dayblocks.action.NEW_BLOCK"
+            android:targetClass="io.github.meko123456.dayblocks.MainActivity"
+            android:targetPackage="io.github.meko123456.dayblocks" />
+    </shortcut>
+</shortcuts>

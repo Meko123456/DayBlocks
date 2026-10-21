@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -88,10 +90,17 @@ fun App() {
         // A tapped review notification opens that day's check-in, and a tapped widget opens Today,
         // whether the tap launched the app or arrived while it was open.
         val link by AppLinks.next.collectAsState()
+        // Add a block goes through Today, so the editor opens on the day + would use, rollover hour
+        // and all; it waits there if Today isn't up yet, during onboarding.
+        var addBlockRequested by remember { mutableStateOf(false) }
         LaunchedEffect(link) {
             when (val opened = link) {
                 is AppLink.Review -> navController.navigate(CheckInRoute(opened.date?.toString()))
                 AppLink.Today -> navController.popBackStack(TodayRoute, inclusive = false)
+                AppLink.NewBlock -> {
+                    navController.popBackStack(TodayRoute, inclusive = false)
+                    addBlockRequested = true
+                }
                 null -> Unit
             }
             if (link != null) AppLinks.consumed()
@@ -113,6 +122,8 @@ fun App() {
                     onOpenStats = { navController.navigate(StatsRoute) },
                     onOpenSettings = { navController.navigate(SettingsRoute) },
                     notice = { ReminderNotice() },
+                    addBlockRequested = addBlockRequested,
+                    onAddBlockHandled = { addBlockRequested = false },
                 )
             }
             composable<EditBlockRoute> { entry ->

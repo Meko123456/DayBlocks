@@ -12,6 +12,9 @@ sealed interface AppLink {
 
     /** A widget: Today, whatever screen the app was left on. */
     data object Today : AppLink
+
+    /** The launcher's Add a block shortcut: the block editor, as + on Today opens it. */
+    data object NewBlock : AppLink
 }
 
 /**
