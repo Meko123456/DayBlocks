@@ -6,6 +6,9 @@ import ComposeApp
 
 @main
 struct DayBlocksApp: App {
+    /// Takes the Home Screen quick action; see QuickActions.swift.
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     /// The notification center holds its delegate weakly; this keeps ours alive for the process.
     private static let notifications = NotificationDelegate()
 

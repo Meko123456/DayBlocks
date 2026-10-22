@@ -186,7 +186,25 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(notice.waitForNonExistence(timeout: 30), "the notice is still up after allowing")
     }
 
-    /// The widget's link, dayblocks://today, brings Today back from another screen.
+    /// The Home Screen's Add a block: Today again from wherever the app was left, and its editor,
+    /// as + opens it, so the block lands on the day being planned.
+    func testAddABlockFromTheHomeScreen() {
+        let templates = app.buttons["Templates"]
+        XCTAssertTrue(templates.waitForExistence(timeout: 30))
+        templates.tapWhenHittable()
+        XCTAssertTrue(app.buttons["Save today as a template"].waitForExistence(timeout: 30), "the Templates screen never opened")
+
+        useQuickAction("io.github.meko123456.dayblocks.new-block", ofAppNamed: "DayBlocks")
+
+        XCTAssertTrue(app.staticTexts["New block"].waitForExistence(timeout: 30), "the quick action did not open the block editor")
+        // Saving goes back to Today, not to Templates: the editor was opened over Today.
+        saveBlock("From the Home Screen")
+        let saved = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'From the Home Screen'")).firstMatch
+        XCTAssertTrue(saved.waitForExistence(timeout: 30), "the block is not on Today")
+    }
+
+    /// The widget's link, dayblocks://today, brings Today back from another screen. The quick
+    /// action's scene delegate sits in the way a link comes in, so it is checked alongside it.
     func testTheWidgetLinkOpensToday() {
         let templates = app.buttons["Templates"]
         XCTAssertTrue(templates.waitForExistence(timeout: 30))
@@ -214,6 +232,12 @@ final class DayBlocksFlowTests: XCTestCase {
         if !editor.waitForExistence(timeout: 15), add.exists, add.isHittable { add.tap() }
 
         XCTAssertTrue(editor.waitForExistence(timeout: 30), "the editor never opened")
+        saveBlock(text)
+    }
+
+    /// Types [text] into the open block editor, saves with the default times, and waits to be back
+    /// on Today.
+    private func saveBlock(_ text: String) {
         // Compose's OutlinedTextField reaches the iOS accessibility tree as a text *view*, labelled
         // with its placeholder — not as a text field, which is what app.textFields looks for.
         let title = app.textViews["What are you doing?"]

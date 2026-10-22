@@ -96,3 +96,8 @@ fun setWidgetReloader(reload: () -> Unit) {
 fun openToday() {
     AppLinks.open(AppLink.Today)
 }
+
+/** The Home Screen's Add a block quick action: the block editor, as + on Today opens it. */
+fun openNewBlock() {
+    AppLinks.open(AppLink.NewBlock)
+}

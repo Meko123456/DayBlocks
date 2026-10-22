@@ -31,6 +31,11 @@ targets:
           - CFBundleURLName: io.github.meko123456.dayblocks
             CFBundleURLSchemes:
               - dayblocks
+        # A long press on the icon offers Add a block, as the Android launcher's shortcut does.
+        UIApplicationShortcutItems:
+          - UIApplicationShortcutItemType: io.github.meko123456.dayblocks.new-block
+            UIApplicationShortcutItemTitle: Add a block
+            UIApplicationShortcutItemIconSymbolName: plus
     # The App Group is how the widget reads what the app writes: the timeline and the faces.
     entitlements:
       path: iosApp/iosApp.entitlements

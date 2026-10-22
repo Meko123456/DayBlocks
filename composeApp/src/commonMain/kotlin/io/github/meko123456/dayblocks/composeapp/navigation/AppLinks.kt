@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.datetime.LocalDate
 
-/** Somewhere the app was asked to open from outside itself — a tapped notification. */
+/** Somewhere the app was asked to open from outside itself: a notification, a widget, its icon. */
 sealed interface AppLink {
     /** The review notification: that day's check-in. */
     data class Review(val date: LocalDate?) : AppLink
@@ -13,7 +13,10 @@ sealed interface AppLink {
     /** A widget: Today, whatever screen the app was left on. */
     data object Today : AppLink
 
-    /** The launcher's Add a block shortcut: the block editor, as + on Today opens it. */
+    /**
+     * Add a block from the app's icon (the launcher shortcut on Android, the Home Screen quick
+     * action on iOS): the block editor, as + on Today opens it.
+     */
     data object NewBlock : AppLink
 }
 
