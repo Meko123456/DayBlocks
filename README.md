@@ -219,6 +219,13 @@ On a physical iPhone the App Group needs your own team's signing. Choose it unde
 Capabilities* for both the app and the `DayBlocksWidget` target. The committed configuration
 signs ad hoc, which only the simulator accepts.
 
+## From the app icon
+
+A long press on the app's icon offers **Add a block**: a launcher shortcut on Android, a Home
+Screen quick action on iOS. It opens the block editor over Today, on the day being planned, as +
+does, whatever screen the app was left on. A new user goes through onboarding first, and the
+editor opens when it ends.
+
 ## Onboarding and settings
 
 **Onboarding** is four short pages:
@@ -313,8 +320,11 @@ deliberate change, redraw them and look at the diff before committing it:
 
 The iOS app also has XCUITests that drive the shared UI end to end: add a block and find it on
 Today, save the day as a template and find it listed, turn on notifications from Today, rename
-the buddy, rate a block at the check-in, change a setting, and walk through onboarding as a new
-user. Every test but the onboarding one launches with `-app.onboarded YES`. That launch argument
+the buddy, rate a block at the check-in, change a setting, walk through onboarding as a new
+user, follow the widget's link back to Today, and add a block from the Home Screen's quick
+action. That last one takes about two and a half minutes: SpringBoard never reports itself idle
+while an icon's menu is open, so XCUITest waits out its 60-second timeout once for the press and
+once for the tap. Every test but the onboarding one launches with `-app.onboarded YES`. That launch argument
 is a user default for that one run, so those tests start on Today without any test code in the
 app. They launch with `DAYBLOCKS_UITEST` set, which gives the app an in-memory database so each
 run starts from an empty plan:
