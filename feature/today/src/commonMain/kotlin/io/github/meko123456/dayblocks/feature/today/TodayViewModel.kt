@@ -40,8 +40,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -112,7 +114,10 @@ class TodayViewModel(
             }
             else -> Unit
         }
-        val date = state.value.planDate ?: return
+        // Waits for the day rather than dropping the intent. Add a block from the app's icon reaches a
+        // Today that has only just opened, in a new process or straight after onboarding, before its
+        // first state has a day.
+        val date = state.value.planDate ?: state.mapNotNull { it.planDate }.first()
         when (intent) {
             is TodayIntent.BlockTapped -> emit(TodayEffect.OpenEditor(date, blockId = intent.id))
             is TodayIntent.FreeTimeTapped -> emit(TodayEffect.OpenEditor(date, prefill = intent.span))

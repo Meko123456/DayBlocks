@@ -97,8 +97,8 @@ fun TodayScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // The launcher's Add a block shortcut does what + does, through the view model, which knows
-    // the day being planned.
+    // Add a block from the app's icon (Android's launcher shortcut, iOS's quick action) does what +
+    // does, through the view model, which knows the day being planned, or waits until it does.
     LaunchedEffect(addBlockRequested) {
         if (addBlockRequested) {
             viewModel.onIntent(TodayIntent.AddBlockTapped)

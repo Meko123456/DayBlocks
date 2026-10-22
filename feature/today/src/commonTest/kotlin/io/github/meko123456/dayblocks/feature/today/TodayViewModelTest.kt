@@ -17,6 +17,7 @@ import io.github.meko123456.dayblocks.core.domain.model.Template
 import io.github.meko123456.dayblocks.core.domain.model.TemplateBlock
 import io.github.meko123456.dayblocks.core.domain.model.TemplateId
 import io.github.meko123456.dayblocks.core.domain.model.TimeBlock
+import io.github.meko123456.dayblocks.core.domain.repository.BlockRepository
 import io.github.meko123456.dayblocks.core.domain.time.PlanningDayRule
 import io.github.meko123456.dayblocks.core.domain.usecase.AutoFillDay
 import io.github.meko123456.dayblocks.core.domain.usecase.FindFreeTime
@@ -34,6 +35,8 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -63,12 +66,12 @@ class TodayViewModelTest {
     private val settings = FakeSettingsRepository()
 
     /** A ViewModel whose clock starts at [start] and moves only when the test advances virtual time. */
-    private fun TestScope.todayAt(start: LocalDateTime): TodayViewModel {
+    private fun TestScope.todayAt(start: LocalDateTime, blocks: BlockRepository = repo): TodayViewModel {
         val clock = OffsetTimeProvider(start.toInstant(zone), zone) { testScheduler.currentTime }
         val autoFill = AutoFillDay(repo, templates, GenerateDayFromTemplate { "filled-${repo.all.value.size}" }, clock)
         val buddy = TodayBuddy(BuddyVoice(MessagePools.Default.firstLinesOnly()))
         return TodayViewModel(
-            repo, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), autoFill,
+            blocks, outcomes, clock, PlanningDayRule(), ResolveNow(), FindFreeTime(), autoFill,
             settings, buddy, ScoreAdherence(), { true }, backgroundScope,
         )
     }
@@ -242,6 +245,26 @@ class TodayViewModelTest {
         vm.effects.test {
             vm.onIntent(TodayIntent.BlockTapped(work.id))
             assertEquals(TodayEffect.OpenEditor(monday, blockId = work.id), awaitItem())
+        }
+    }
+
+    /**
+     * Add a block from the app's icon (the Android shortcut, the iOS quick action) reaches a Today
+     * that has only just opened, in a new process or straight after onboarding, before its first
+     * state has a day. The intent was dropped there, and Today opened without the editor.
+     */
+    @Test
+    fun addBlockSentBeforeTheDayHasLoadedOpensTheEditorOnceItHas() = runTest {
+        // The database answers a moment after Today opens, as it does in the app.
+        val slow = object : BlockRepository by repo {
+            override fun observeDay(date: LocalDate) = repo.observeDay(date).onStart { delay(200) }
+        }
+        val vm = todayAt(LocalDateTime(2026, 9, 21, 10, 0), blocks = slow)
+        vm.effects.test {
+            vm.onIntent(TodayIntent.AddBlockTapped)
+            runCurrent()
+            assertNull(vm.state.value.planDate, "the day was known before the intent was handled")
+            assertEquals(TodayEffect.OpenEditor(monday), awaitItem())
         }
     }
 
