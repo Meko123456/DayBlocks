@@ -186,6 +186,18 @@ final class DayBlocksFlowTests: XCTestCase {
         XCTAssertTrue(notice.waitForNonExistence(timeout: 30), "the notice is still up after allowing")
     }
 
+    /// The widget's link, dayblocks://today, brings Today back from another screen.
+    func testTheWidgetLinkOpensToday() {
+        let templates = app.buttons["Templates"]
+        XCTAssertTrue(templates.waitForExistence(timeout: 30))
+        templates.tapWhenHittable()
+        XCTAssertTrue(app.buttons["Save today as a template"].waitForExistence(timeout: 30), "the Templates screen never opened")
+
+        XCUIDevice.shared.system.open(URL(string: "dayblocks://today")!)
+
+        XCTAssertTrue(app.staticTexts["NOW"].waitForExistence(timeout: 30), "the widget's link did not open Today")
+    }
+
     /// Adds a block through the editor with the default times and waits to be back on Today.
     private func addBlock(_ text: String) {
         // "matching", not "containing": the FAB's own label is "+  Add block", and containing looks
