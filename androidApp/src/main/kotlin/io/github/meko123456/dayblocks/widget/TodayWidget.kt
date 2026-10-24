@@ -2,6 +2,7 @@ package io.github.meko123456.dayblocks.widget
 
 import android.content.Context
 import android.content.Intent
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -42,9 +43,16 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import io.github.meko123456.dayblocks.MainActivity
 import io.github.meko123456.dayblocks.composeapp.widgets.WidgetUpdater
+import io.github.meko123456.dayblocks.core.buddy.WidgetBlock
 import io.github.meko123456.dayblocks.core.buddy.WidgetEntry
+import io.github.meko123456.dayblocks.core.domain.model.BuddyMood
+import io.github.meko123456.dayblocks.core.domain.model.Category
 import io.github.meko123456.dayblocks.core.designsystem.buddy.renderBuddy
 import org.koin.core.component.KoinComponent
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.time.Clock
 import org.koin.core.component.get
 
 /**
@@ -71,6 +79,30 @@ class TodayWidget : GlanceAppWidget(), KoinComponent {
             val face = remember(entry.mood) { ImageProvider(renderBuddy(entry.mood, FACE_PX).asAndroidBitmap()) }
             Content(entry, state.buddyName, face, open)
         }
+    }
+
+    override val previewSizeMode = SizeMode.Responsive(setOf(SMALL, MEDIUM))
+
+    /**
+     * What the widget picker shows on Android 15 and later: the widget itself on a made-up
+     * morning, Kubi happy two blocks into five, instead of the app icon in a box. Never the user's
+     * own plan, since a preview is shown to whoever opens the picker. [WidgetPreviews] hands it to
+     * the system.
+     */
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val clock = DateTimeFormatter.ofPattern(if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a", Locale.getDefault())
+        fun at(hour: Int) = LocalTime.of(hour, 0).format(clock)
+        val now = Clock.System.now()
+        val entry = WidgetEntry(
+            at = now,
+            current = WidgetBlock("Deep work", Category.Work, now, now, startClock = at(9), endClock = at(12)),
+            next = WidgetBlock("Lunch", Category.Cooking, now, now, startClock = at(12), endClock = at(13)),
+            done = 2,
+            planned = 5,
+            mood = BuddyMood.Happy,
+        )
+        val face = ImageProvider(renderBuddy(entry.mood, FACE_PX).asAndroidBitmap())
+        provideContent { Content(entry, name = "Kubi", face, Intent(context, MainActivity::class.java)) }
     }
 
     companion object {

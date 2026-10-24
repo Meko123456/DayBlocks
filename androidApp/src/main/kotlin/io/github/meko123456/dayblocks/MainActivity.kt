@@ -5,16 +5,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.lifecycleScope
 import io.github.meko123456.dayblocks.composeapp.AndroidApp
 import io.github.meko123456.dayblocks.composeapp.navigation.AppLink
 import io.github.meko123456.dayblocks.composeapp.navigation.AppLinks
 import io.github.meko123456.dayblocks.core.domain.model.NotificationKind
 import io.github.meko123456.dayblocks.core.notifications.ReminderIntents
+import io.github.meko123456.dayblocks.widget.WidgetPreviews
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        lifecycleScope.launch { WidgetPreviews.publish(applicationContext) }
         // Only a fresh launch: after a rotation the same intent would open the review again.
         if (savedInstanceState == null) openFrom(intent)
         setContent { AndroidApp() }
