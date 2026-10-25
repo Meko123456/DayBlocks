@@ -34,6 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -125,13 +127,19 @@ internal fun EditBlockContent(state: EditBlockState, onIntent: (EditBlockIntent)
 
             Section("When") {
                 val labelWidth = stepperLabelWidth("Starts", "Ends")
-                TimeStepper("Starts", labelWidth, formatClock(state.span.startMinutes, is24Hour), { onIntent(EditBlockIntent.StartStepped(-1)) }, { onIntent(EditBlockIntent.StartStepped(1)) })
+                TimeStepper(
+                    "Starts",
+                    labelWidth,
+                    formatClock(state.span.startMinutes, is24Hour),
+                    earlier = "Start earlier" to { onIntent(EditBlockIntent.StartStepped(-1)) },
+                    later = "Start later" to { onIntent(EditBlockIntent.StartStepped(1)) },
+                )
                 TimeStepper(
                     "Ends",
                     labelWidth,
                     formatClock(state.span.endMinutes, is24Hour) + if (state.span.crossesMidnight) "  (next day)" else "",
-                    { onIntent(EditBlockIntent.EndStepped(-1)) },
-                    { onIntent(EditBlockIntent.EndStepped(1)) },
+                    earlier = "End earlier" to { onIntent(EditBlockIntent.EndStepped(-1)) },
+                    later = "End later" to { onIntent(EditBlockIntent.EndStepped(1)) },
                 )
                 Text(
                     formatDuration(state.span.durationMinutes),
@@ -202,17 +210,41 @@ private fun stepperLabelWidth(vararg labels: String): Dp {
     return maxOf(64.dp, widest + 4.dp)
 }
 
+/** [earlier] and [later] are each a button's spoken name and its action. */
 @Composable
-private fun TimeStepper(label: String, labelWidth: Dp, value: String, onEarlier: () -> Unit, onLater: () -> Unit) {
+private fun TimeStepper(
+    label: String,
+    labelWidth: Dp,
+    value: String,
+    earlier: Pair<String, () -> Unit>,
+    later: Pair<String, () -> Unit>,
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(label, modifier = Modifier.width(labelWidth), style = MaterialTheme.typography.bodyLarge, maxLines = 1)
-        FilledTonalIconButton(onClick = onEarlier) { Text("−", style = MaterialTheme.typography.titleLarge) }
+        StepButton("−", earlier)
         Text(
             value,
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
         )
-        FilledTonalIconButton(onClick = onLater) { Text("+", style = MaterialTheme.typography.titleLarge) }
+        StepButton("+", later)
+    }
+}
+
+/**
+ * The glyph is what shows, the name is what TalkBack and VoiceOver say. The glyph alone was all
+ * they had, so the four buttons read as "minus" and "plus" twice, with nothing to say which time
+ * each one moved or which way.
+ */
+@Composable
+private fun StepButton(glyph: String, named: Pair<String, () -> Unit>) {
+    val (name, onClick) = named
+    FilledTonalIconButton(onClick = onClick) {
+        Text(
+            glyph,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.clearAndSetSemantics { contentDescription = name },
+        )
     }
 }
