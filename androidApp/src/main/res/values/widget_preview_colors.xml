@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Today widget's colours (TodayWidget.kt) for the picker's preview layout: Paper,
+         Ink and Sunrise, with Ink at 60% for the quiet lines. values-night swaps paper and ink. -->
+    <color name="widget_preview_background">#FFFAF7F2</color>
+    <color name="widget_preview_text">#FF1B1D22</color>
+    <color name="widget_preview_quiet">#991B1D22</color>
+    <color name="widget_preview_accent">#FFF2994A</color>
+</resources>

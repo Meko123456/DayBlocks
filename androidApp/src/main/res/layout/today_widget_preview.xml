@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the widget picker shows on Android 12 to 14: the small Today widget on the made-up
+     morning TodayWidget.providePreview draws for Android 15 and later, Kubi happy during Deep
+     work. Never the user's own plan. Without it the picker showed the app icon in a box.
+     The launcher inflates this, not AppCompat, so Kubi is a framework drawableStart. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_background"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="12dp"
+    tools:ignore="HardcodedText,UseCompatTextViewDrawableXml">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawablePadding="6dp"
+        android:drawableStart="@drawable/widget_preview_buddy"
+        android:gravity="center_vertical"
+        android:text="Kubi"
+        android:textColor="@color/widget_preview_accent"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="Deep work"
+        android:textColor="@color/widget_preview_text"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="until 12:00"
+        android:textColor="@color/widget_preview_quiet"
+        android:textSize="12sp" />
+</LinearLayout>
