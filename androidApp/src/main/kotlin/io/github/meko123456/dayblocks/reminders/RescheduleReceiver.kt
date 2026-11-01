@@ -15,7 +15,8 @@ import org.koin.core.component.get
  * (alarms do not survive one), an update, the clock or time zone changing — Android reports a
  * switch between 12- and 24-hour time as a time change too, which matters because the text says
  * "13:00" or "1:00 PM" — the language changing, exact alarms being allowed, and the scheduler's
- * own refresh that keeps the window rolling.
+ * own refresh that keeps the window rolling. [RestoreAgent] sets that refresh when a restore
+ * finishes, since nothing else would start the app on a new phone.
  *
  * Not exported: these are system broadcasts, which reach a receiver that is not exported, and no
  * other app has any business asking for a reschedule.

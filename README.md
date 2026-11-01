@@ -119,7 +119,8 @@ whenever anything it depends on changes:
 - the plan, an answer or a template assignment
 - a new planning day
 - on Android: a reboot, an update, the clock, time zone, 12/24-hour or language changing,
-  exact alarms being allowed, and a 12-hourly refresh
+  exact alarms being allowed, a 12-hourly refresh, and a restore from a backup (a new phone or a
+  reinstall), before the app is opened
 - on iOS: the app coming to the foreground, a significant time change, and background refresh
 
 Days the window reaches get their template first, so tomorrow's 07:00 run is scheduled tonight
