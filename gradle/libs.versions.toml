@@ -2,7 +2,7 @@
 # Toolchain, held identical to the rest of the fleet. tools/toolchain-drift.sh in challenge-hq
 # checks this; a version that lands here alone drifts invisibly, because a drifted repo still
 # builds green.
-agp = "9.4.1"
+agp = "9.5.1"
 kotlin = "2.4.21"
 composeMultiplatform = "1.12.1"
 material3 = "1.13.0-alpha01"
@@ -13,7 +13,7 @@ jb-navigation = "2.9.2"
 koin = "4.2.2"
 coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-kotlinx-serialization = "1.11.0"
+kotlinx-serialization = "1.12.0"
 sqldelight = "2.4.0"
 multiplatformSettings = "1.3.0"
 glance = "1.2.0"
