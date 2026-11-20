@@ -9,8 +9,16 @@ with one is rejected at upload, even when every pixel is opaque.
 
     python3 iosApp/Icon/render_app_icon.py
 
-Needs Google Chrome and Pillow. Run it again whenever ic_launcher_foreground.xml changes.
+The tinted icon, for the Home Screen that colours every icon with one tint, comes from the
+launcher's monochrome layer instead: the same silhouette Android uses for a themed icon, in
+grayscale on transparency, which iOS 18 colours itself. Without one the system tints the light
+icon, Kubi and all.
+
+Needs Google Chrome and Pillow. Run it again whenever ic_launcher_foreground.xml or
+ic_launcher_monochrome.xml changes.
 """
+
+from __future__ import annotations
 
 import pathlib
 import subprocess
@@ -21,6 +29,7 @@ from PIL import Image
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 FOREGROUND = ROOT / "androidApp/src/main/res/drawable/ic_launcher_foreground.xml"
+MONOCHROME = ROOT / "androidApp/src/main/res/drawable/ic_launcher_monochrome.xml"
 ICONSET = ROOT / "iosApp/iosApp/Assets.xcassets/AppIcon.appiconset"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 ANDROID = "{http://schemas.android.com/apk/res/android}"
@@ -46,9 +55,10 @@ def paint(value: str) -> tuple[str, str]:
     return (f"#{rgb}", f"{alpha / 255:.3f}") if alpha else ("none", "0")
 
 
-def to_svg(background: str) -> str:
+def to_svg(background: str | None, layer: pathlib.Path = FOREGROUND) -> str:
+    """[layer] over a square of [background], or over nothing when it is None."""
     paths = []
-    for node in ET.parse(FOREGROUND).getroot().iter("path"):
+    for node in ET.parse(layer).getroot().iter("path"):
         attrs = {"d": node.get(f"{ANDROID}pathData")}
         fill, fill_opacity = paint(node.get(f"{ANDROID}fillColor", "#00000000"))
         attrs.update({"fill": fill, "fill-opacity": fill_opacity})
@@ -58,25 +68,31 @@ def to_svg(background: str) -> str:
             attrs["stroke-linecap"] = node.get(f"{ANDROID}strokeLineCap", "butt")
         paths.append("<path " + " ".join(f'{k}="{v}"' for k, v in attrs.items()) + "/>")
     x, y, w, h = (float(n) for n in VIEW_BOX.split())
+    square = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{background}"/>' if background else ""
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{VIEW_BOX}" width="{SIZE}" height="{SIZE}">'
-        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{background}"/>'
+        + square
         + "".join(paths)
         + "</svg>"
     )
 
 
-def render(svg: str, out: pathlib.Path) -> None:
+def render(svg: str, out: pathlib.Path, grayscale_with_alpha: bool = False) -> None:
     with tempfile.TemporaryDirectory() as tmp:
         page = pathlib.Path(tmp, "icon.html")
-        page.write_text(f'<html><body style="margin:0">{svg}</body></html>')
+        page.write_text(f'<html><body style="margin:0;background:transparent">{svg}</body></html>')
         shot = pathlib.Path(tmp, "icon.png")
         subprocess.run(
             [CHROME, "--headless", "--disable-gpu", "--hide-scrollbars", "--force-device-scale-factor=1",
-             f"--window-size={SIZE},{SIZE}", f"--screenshot={shot}", page.as_uri()],
+             "--default-background-color=00000000", f"--window-size={SIZE},{SIZE}", f"--screenshot={shot}",
+             page.as_uri()],
             check=True, capture_output=True,
         )
-        Image.open(shot).convert("RGB").save(out, optimize=True)
+        image = Image.open(shot).convert("RGBA")
+        if grayscale_with_alpha:
+            Image.merge("LA", (image.convert("L"), image.getchannel("A"))).save(out, optimize=True)
+        else:
+            image.convert("RGB").save(out, optimize=True)
 
 
 def main() -> None:
@@ -84,6 +100,8 @@ def main() -> None:
     for name, background in APPEARANCES.items():
         render(to_svg(background), ICONSET / name)
         print(ICONSET.relative_to(ROOT) / name)
+    render(to_svg(None, MONOCHROME), ICONSET / "AppIcon-Tinted.png", grayscale_with_alpha=True)
+    print(ICONSET.relative_to(ROOT) / "AppIcon-Tinted.png")
 
 
 if __name__ == "__main__":
