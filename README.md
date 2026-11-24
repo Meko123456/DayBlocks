@@ -89,8 +89,8 @@ Two rules the build enforces rather than documents:
 | `dayblocks.kmp.koin` | Koin core, plus koin-test for tests |
 | `dayblocks.kmp.feature` | All three, plus domain, design system, lifecycle ViewModel, coroutines-test and Turbine |
 
-Versions live in `gradle/libs.versions.toml` and match the rest of the fleet: AGP 9.4.1,
-Kotlin 2.4.21, Gradle 9.8.1, compileSdk 37. Compose Multiplatform is 1.12.1.
+Versions live in `gradle/libs.versions.toml` and match the rest of the fleet: AGP 9.5.2,
+Kotlin 2.4.21, Gradle 9.9.2, compileSdk 37. Compose Multiplatform is 1.12.2.
 
 ## Reminders
 

@@ -2,7 +2,7 @@
 # Toolchain, held identical to the rest of the fleet. tools/toolchain-drift.sh in challenge-hq
 # checks this; a version that lands here alone drifts invisibly, because a drifted repo still
 # builds green.
-agp = "9.5.1"
+agp = "9.5.2"
 kotlin = "2.4.21"
 composeMultiplatform = "1.12.2"
 material3 = "1.13.0-alpha01"
